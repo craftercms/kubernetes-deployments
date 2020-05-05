@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - authoring-deployment.yaml
+configMapGenerator:
+  - name: authoring-studio-config
+    files:
+      - resources/config/studio/studio-config-override.yaml
+secretGenerator:
+  - name: authoring-crafter-license
+    files:
+      - resources/secrets/crafter.lic
+  - name: authoring-ssh-keys
+    files:
+      # Please remember to generate missing files
+      - resources/secrets/.ssh/authorized_keys
+      - resources/secrets/.ssh/config
+      - resources/secrets/.ssh/id_rsa
+      - resources/secrets/.ssh/id_rsa.pub

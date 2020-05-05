@@ -1,0 +1,102 @@
+# Arbiter Headless service
+apiVersion: v1
+kind: Service
+metadata:
+  name: arbiter-service
+spec:
+  selector:
+    component: arbiter
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: ssh
+      protocol: TCP
+      port: 22
+      targetPort: 22
+    - name: db-default
+      protocol: TCP
+      port: 3306
+      targetPort: 3306
+    - name: db-rep-tcp
+      protocol: TCP
+      port: 4567
+      targetPort: 4567
+    - name: db-rep-udp
+      protocol: UDP
+      port: 4567
+      targetPort: 4567
+    - name: db-ist
+      protocol: TCP
+      port: 4568
+      targetPort: 4568
+    - name: db-sst
+      protocol: TCP
+      port: 4444
+      targetPort: 4444
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arbiter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: arbiter
+  template:
+    metadata:
+      labels:
+        component: arbiter
+    spec:
+      volumes:
+        - name: logs
+          emptyDir: {}
+      containers:
+        # Arbiter container
+        - name: arbiter
+          image: craftercms/studio-arbiter:3.1.6E_BYOL
+          imagePullPolicy: "Always"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            failureThreshold: 4
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 120
+            failureThreshold: 10
+            timeoutSeconds: 60
+            periodSeconds: 90
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 8080
+            - name: db-default
+              protocol: TCP
+              containerPort: 3306
+            - name: db-rep-tcp
+              protocol: TCP
+              containerPort: 4567
+            - name: db-rep-udp
+              protocol: UDP
+              containerPort: 4567
+            - name: db-ist
+              protocol: TCP
+              containerPort: 4568
+            - name: db-sst
+              protocol: TCP
+              containerPort: 4444 
+          volumeMounts:
+            - name: logs
+              mountPath: /opt/studio-arbiter/logs
+          env:
+            - name: CLUSTER_NAME
+              value: studio_db_cluster
+            - name: CLUSTER_ADDRESS
+              value: authoring-service-headless.default.svc.cluster.local

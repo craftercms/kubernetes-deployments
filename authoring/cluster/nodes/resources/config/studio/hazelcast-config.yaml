@@ -1,0 +1,10 @@
+hazelcast:
+  network:
+    join:
+      multicast:
+        enabled: false
+      kubernetes:
+        enabled: true
+        namespace: default
+        service-name: authoring-service-headless
+        resolve-not-ready-addresses: true

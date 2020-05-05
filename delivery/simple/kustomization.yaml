@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - delivery-deployment.yaml
+secretGenerator:
+  - name: delivery-crafter-license
+    files:
+      - resources/secrets/crafter.lic
+  - name: delivery-ssh-keys
+    files:
+      # Please remember to generate missing files
+      - resources/secrets/.ssh/authorized_keys
+      - resources/secrets/.ssh/config
+      - resources/secrets/.ssh/id_rsa
+      - resources/secrets/.ssh/id_rsa.pub

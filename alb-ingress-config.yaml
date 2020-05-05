@@ -1,0 +1,4 @@
+clusterName: kuber-testing
+
+autoDiscoverAwsRegion: true
+autoDiscoverAwsVpcID: true

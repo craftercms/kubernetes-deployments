@@ -1,0 +1,174 @@
+# ALB Ingress
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: delivery-ingress
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/healthcheck-port: '8080'
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-path: /api/1/monitoring/status.json?token=defaultManagementToken
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+    alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=900
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: delivery-service-headless
+              servicePort: 8080
+---
+# Delivery Headless service, needed for stable DNS entries of StatefulSet members.
+apiVersion: v1
+kind: Service
+metadata:
+  name: delivery-service-headless
+spec:
+  clusterIP: None
+  selector:
+    component: delivery
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+# Delivery Deployment
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: delivery
+spec:
+  serviceName: delivery-service-headless
+  replicas: 2
+  selector:
+    matchLabels:
+      component: delivery
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Gi
+  template:
+    metadata:
+      labels:
+        component: delivery
+    spec:
+      volumes:
+        - name: ssh-keys
+          secret:
+            secretName: delivery-ssh-keys
+        - name: crafter-license
+          secret:
+            secretName: delivery-crafter-license
+        - name: temp
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
+      containers:
+        # Elasticsearch container
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:6.8.6
+          readinessProbe:
+            httpGet:
+              path: /_cat/nodes?h=uptime
+              port: 9200
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /_cat/nodes?h=uptime
+              port: 9200
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          ports:
+            - containerPort: 9200
+          volumeMounts:
+            - name: data
+              subPath: indexes-es
+              mountPath: /usr/share/elasticsearch/data
+            - name: logs
+              subPath: elasticsearch
+              mountPath: /usr/share/elasticsearch/logs
+          env:
+            - name: discovery.type
+              value: single-node
+            - name: bootstrap.memory_lock
+              value: "true"
+            - name: ES_JAVA_OPTS
+              value: "-server -Xss1024K -Xmx2G"
+        # Tomcat container
+        - name: tomcat
+          image: craftercms/delivery_tomcat:3.1.6
+          readinessProbe:
+            httpGet:
+              path: /api/1/monitoring/status.json?token=defaultManagementToken
+              port: 8080
+            initialDelaySeconds: 60
+            failureThreshold: 55
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/1/monitoring/status.json?token=defaultManagementToken
+              port: 8080
+            initialDelaySeconds: 600
+            failureThreshold: 5
+            timeoutSeconds: 60
+            periodSeconds: 60
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: crafter-license
+              subPath: crafter.lic
+              mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/license/crafter.lic
+              readOnly: true
+            - name: ssh-keys
+              mountPath: /opt/crafter/.ssh
+              readOnly: true
+            - name: data
+              mountPath: /opt/crafter/data
+            - name: temp
+              mountPath: /opt/crafter/temp
+            - name: logs
+              mountPath: /opt/crafter/logs
+          env:
+            - name: CATALINA_OPTS
+              value: "-server -Xss1024K -Xms1G -Xmx3G"
+        # Deployer container
+        - name: deployer
+          image: craftercms/deployer:3.1.6
+          readinessProbe:
+            httpGet:
+              path: /api/1/monitoring/status?token=defaultManagementToken
+              port: 9191
+            initialDelaySeconds: 30
+            failureThreshold: 16
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/1/monitoring/status?token=defaultManagementToken
+              port: 9191
+            initialDelaySeconds: 180
+            failureThreshold: 10
+            timeoutSeconds: 60
+            periodSeconds: 60  
+          ports:
+            - containerPort: 9191
+          volumeMounts:
+            - name: ssh-keys
+              mountPath: /opt/crafter/.ssh
+              readOnly: true
+            - name: data
+              mountPath: /opt/crafter/data
+            - name: temp
+              mountPath: /opt/crafter/temp
+            - name: logs
+              mountPath: /opt/crafter/logs
+          env:
+            - name: DEPLOYER_JAVA_OPTS
+              value: "-server -Xss1024K -Xmx2G"

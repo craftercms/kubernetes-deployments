@@ -1,0 +1,23 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  version: "1.15"
+  name: kuber-testing
+  region: us-east-1
+
+availabilityZones: ["us-east-1a", "us-east-1b", "us-east-1c"]
+
+nodeGroups:
+  - name: az1-workers
+    instanceType: m5.2xlarge
+    availabilityZones: ["us-east-1a"]
+    minSize: 1
+    maxSize: 5
+    volumeSize: 15
+    privateNetworking: false
+    iam:
+      withAddonPolicies:
+        albIngress: true
+        autoScaler: true
+        cloudWatch: true
