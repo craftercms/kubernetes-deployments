@@ -7,9 +7,6 @@ configMapGenerator:
     files:
       - resources/config/studio/studio-config-override.yaml
 secretGenerator:
-  - name: authoring-crafter-license
-    files:
-      - resources/secrets/crafter.lic
   - name: authoring-ssh-keys
     files:
       # Please remember to generate missing files

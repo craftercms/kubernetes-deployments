@@ -76,9 +76,6 @@ spec:
         - name: ssh-keys
           secret:
             secretName: authoring-ssh-keys
-        - name: crafter-license
-          secret:
-            secretName: authoring-crafter-license
         - name: studio-config
           configMap:
             name: authoring-studio-config
@@ -192,7 +189,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G"
         # Git SSH server container
         - name: git-ssh-server
-          image: craftercms/git_ssh_server:3.1.6E_BYOL
+          image: craftercms/git_ssh_server:3.1.6
           imagePullPolicy: "Always"
           ports:
             - containerPort: 22
