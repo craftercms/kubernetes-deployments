@@ -120,10 +120,6 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
-            - name: crafter-license
-              subPath: crafter.lic
-              mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/license/crafter.lic
-              readOnly: true
             - name: ssh-keys
               mountPath: /opt/crafter/.ssh
               readOnly: true

@@ -137,10 +137,6 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
-            - name: crafter-license
-              subPath: crafter.lic
-              mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/license/crafter.lic
-              readOnly: true
             - name: studio-config
               subPath: studio-config-override.yaml
               mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/studio/extension/studio-config-override.yaml
