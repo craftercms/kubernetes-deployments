@@ -5,10 +5,10 @@
 studio.repo.basePath: ${env:CRAFTER_DATA_DIR}/repos
 # Sandbox git repository branch for every site
 # studio.repo.siteSandboxBranch: master
-# If not using environment-config.xml, environments are configured here
-# Git repository branch for the `live` environment, default "live"
+# Git repository branch for publishing targets are configured here
+# Git repository branch for the `live` publishing target, default "live"
 # studio.repo.published.live: live
-# Git repository branch for the `staging` environment, default "staging"
+# Git repository branch for the `staging` publishing target, default "staging"
 # studio.repo.published.staging: staging
 
 ############################################################
@@ -27,7 +27,7 @@ studio.configuration.management.authorizationToken: ${env:STUDIO_MANAGEMENT_TOKE
 # Preview engine management authorization token.
 studio.configuration.management.previewAuthorizationToken: ${env:ENGINE_MANAGEMENT_TOKEN}
 # Protected URLs with preview engine management authorization token.
-# Coma separated list of preview engine urls
+# Comma separated list of preview engine urls
 studio.configuration.management.previewProtectedUrls: >-
   /api/1/monitoring/log.json,
   /api/1/monitoring/memory.json,
@@ -176,8 +176,6 @@ studio.security.encryption.salt: ${env:CRAFTER_ENCRYPTION_SALT}
 ###############################################################
 ##               SAML Security                               ##
 ###############################################################
-# SAML security enabled
-# studio.security.saml.enabled: true
 # SAML attribute name for email
 # studio.security.saml.attributeName.email: email
 # SAML attribute name for first name
@@ -200,6 +198,29 @@ studio.security.encryption.salt: ${env:CRAFTER_ENCRYPTION_SALT}
 # studio.security.saml.keystore.alias: crafterstudio
 # SAML logout URL
 # studio.security.saml.logoutUrl: /studio/saml/logout
+# Enable SAML configuration used when Studio is behind a reverse proxy or load balancer
+# studio.security.saml.reverseProxy.enabled: false
+# The header name that contains the public URL (matching the SAML SP URL) hostname
+# studio.security.saml.reverseProxy.forwardedHostHeaderName: X-Forwarded-Host
+# The header name that contains the public URL (matching the SAML SP URL) port
+# studio.security.saml.reverseProxy.forwardedPortHeaderName: X-Forwarded-Port
+# The header name that contains the public URL (matching the SAML SP URL) protocol
+# studio.security.saml.reverseProxy.forwardedProtoHeaderName: X-Forwarded-Proto
+# The scheme or protocol of the public URL (matching the SAML SP URL). Use if you wan to overwrite the forwarded header
+# studio.security.saml.reverseProxy.scheme:
+# The server name or hostname of the public URL (matching the SAML SP URL). Use if you wan to overwrite the forwarded header
+# studio.security.saml.reverseProxy.serverName:
+# The port of the public URL (matching the SAML SP URL). Use if you wan to overwrite the forwarded header
+# studio.security.saml.reverseProxy.serverPort: 0
+# The context path of the public URL (matching the SAML SP URL)
+# studio.security.saml.reverseProxy.contextPath:
+# SAML Web SSO profile options: authenticate the user silently
+# studio.security.saml.webSSOProfileOptions.passive: false
+# SAML Web SSO profile options: force user to re-authenticate
+# studio.security.saml.webSSOProfileOptions.forceAuthn: false
+
+# Defines name used for environment specific configuration. It is used for environment overrides in studio. Default value is default.
+studio.configuration.environment.active: ${env:CRAFTER_ENVIRONMENT}
 
 ##################################################
 ##        SMTP Configuration (Email)            ##
@@ -325,8 +346,6 @@ studio.db.cluster.nodes.local.synced.wait.timeout: 180
 # studio.cors.credentials: true
 # Value for the Access-Control-Max-Age header
 # studio.cors.maxage: -1
-# The active environment for multi environment configuration, e.g. qa, prod, dev
-# studio.configuration.environment.active: ENV
 
 ################################################################
 ##                           Search                           ##
@@ -337,12 +356,20 @@ studio.search.urls: ${env:ES_URL}
 studio.search.username: ${env:ES_USERNAME}
 # The password for Elasticsearch
 studio.search.password: ${env:ES_PASSWORD}
+# The connection timeout in milliseconds, if set to -1 the default will be used
+studio.search.timeout.connect: -1
+# The socket timeout in milliseconds, if set to -1 the default will be used
+studio.search.timeout.socket: -1
+# The number of threads to use, if set to -1 the default will be used
+studio.search.threads: -1
 
 ##########################################################
 ##                 Serverless Delivery                  ##
 ##########################################################
 # Indicates if serverless delivery is enabled
 # studio.serverless.delivery.enabled: true
+# Indicates if the local (preview) Deployer is going to be used for serverless deployments
+# studio.serverless.delivery.deployer.local: true
 # The URL for the serverless delivery deployer create URL
 # studio.serverless.delivery.deployer.target.createUrl: ${studio.preview.createTargetUrl}
 # The URL for the serverless delivery deployer delete URL
@@ -351,12 +378,10 @@ studio.search.password: ${env:ES_PASSWORD}
 # studio.serverless.delivery.deployer.target.template: aws-cloudformed-s3
 # Replace existing target configuration if one exists?
 # studio.serverless.delivery.deployer.target.replace: false
-# The URL the deployer will use to clone/pull the site's published repo. When the deployer is in a separate node
-# (because of clustering), this URL should be an SSH/HTTP URL to the load balancer in front of the Studios
-# studio.serverless.delivery.deployer.target.remoteRepoUrl: ${env:CRAFTER_DATA_DIR}/repos/sites/{siteName}/published
-# The deployer's local path where it will store the clone of the published site. This property is not needed if
-# the deployer is not the preview deployer, so you can leave an empty string ('') instead
-# studio.serverless.delivery.deployer.target.localRepoPath: ${env:CRAFTER_DATA_DIR}/repos/aws/{siteName}
+# The URL of the site repo that the Deployer needs to upload to the bucket needed by serverless delivery. If using the
+# local deployer, this should be the local path to the published repo. If using a a Deployer in a separate node
+# (because of clustering), this should be an load balanced SSH/HTTP URL to the published repo
+# studio.serverless.delivery.deployer.target.repoUrl: ${env:CRAFTER_DATA_DIR}/repos/sites/{siteName}/published
 # Parameters for the target template. Please check the deployer template documentation for the possible parameters.
 # The following parameters will be sent automatically, and you don't need to specify them: env, site_name, replace,
 # disable_deploy_cron, local_repo_path, repo_url, use_crafter_search
