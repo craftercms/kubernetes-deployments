@@ -11,6 +11,7 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=1800
     alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=900
 spec:
   rules:
@@ -120,7 +121,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G"
         # Tomcat container
         - name: tomcat
-          image: craftercms/authoring_tomcat:3.1.6
+          image: craftercms/authoring_tomcat:3.1.9-SNAPSHOT
           imagePullPolicy: "Always"
           readinessProbe:
             httpGet:
@@ -140,10 +141,6 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
-            - name: crafter-license
-              subPath: crafter.lic
-              mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/license/crafter.lic
-              readOnly: true
             - name: studio-config
               subPath: studio-config-override.yaml
               mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/studio/extension/studio-config-override.yaml
@@ -159,7 +156,7 @@ spec:
               value: "-server -Xss1024K -Xms2G -Xmx4G" 
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.6
+          image: craftercms/deployer:3.1.9-SNAPSHOT
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
@@ -192,7 +189,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G"
         # Git SSH server container
         - name: git-ssh-server
-          image: craftercms/git_ssh_server:3.1.6E_BYOL
+          image: craftercms/git_ssh_server:3.1.9-SNAPSHOT
           imagePullPolicy: "Always"
           ports:
             - containerPort: 22
