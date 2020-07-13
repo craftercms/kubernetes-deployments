@@ -77,9 +77,6 @@ spec:
         - name: ssh-keys
           secret:
             secretName: authoring-ssh-keys
-        - name: crafter-license
-          secret:
-            secretName: authoring-crafter-license
         - name: studio-config
           configMap:
             name: authoring-studio-config

@@ -3,9 +3,6 @@ kind: Kustomization
 resources:
   - delivery-deployment.yaml
 secretGenerator:
-  - name: delivery-crafter-license
-    files:
-      - resources/secrets/crafter.lic
   - name: delivery-ssh-keys
     files:
       # Please remember to generate missing files
