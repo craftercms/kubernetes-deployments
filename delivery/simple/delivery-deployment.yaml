@@ -101,7 +101,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G"
         # Tomcat container
         - name: tomcat
-          image: craftercms/delivery_tomcat:3.1.6
+          image: craftercms/delivery_tomcat:3.1.9-SNAPSHOT
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status.json?token=defaultManagementToken
@@ -120,10 +120,6 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
-            - name: crafter-license
-              subPath: crafter.lic
-              mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/license/crafter.lic
-              readOnly: true
             - name: ssh-keys
               mountPath: /opt/crafter/.ssh
               readOnly: true
@@ -138,7 +134,7 @@ spec:
               value: "-server -Xss1024K -Xms1G -Xmx3G"
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.6
+          image: craftercms/deployer:3.1.9-SNAPSHOT
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
