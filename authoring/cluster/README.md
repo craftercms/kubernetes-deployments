@@ -11,6 +11,9 @@ Enterprise images are required for running an Authoring cluster with embedded DB
 
 ## Update the cluster nodes
 
+**IMPORTANT:** These steps are mainly for making minor configuration updates. If you need to upgrade the Crafter CMS
+images to a new version, please follow the *Upgrade to a new version of Crafter CMS* section
+
 1. `cd nodes`
 2. Run `kubectl apply -k`. The containers are not automatically terminated.
 3. Terminate one container so that a new container with the updated deployment changes is created.
