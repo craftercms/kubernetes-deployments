@@ -31,15 +31,15 @@ images to a new version, please follow the *Upgrade to a new version of Crafter 
 ## Upgrade to a new version of Crafter CMS
 
 1. Scale the Arbiter Deployment to 0, by updating the `spec.replicas` in the `arbiter/arbiter-deployment.yaml` and 
-doing `kubectl apply -k .`. Make sure the `arbiter` pod is terminated.
-2. Scale the Authoring StatefulSet to 1, by updating the `spec.replicas` in the `nodes/authoring-deployment.yaml` and 
-doing `kubectl apply -k .`. Make sure the `authoring-1` (second pod) is terminated. If not, kill it. Only
-`authoring-0` should be running now.
+runnin `kubectl apply -k .`. Make sure the `arbiter` pod is terminated.
+2. Scale the Authoring StatefulSet to 1, by updating the `spec.replicas` in the `nodes/authoring-deployment.yaml`, 
+making sure the `MARIADB_CLUSTER_NODE_COUNT` env variable is set to 1, and running `kubectl apply -k .`. Verify
+the `authoring-1` (second pod) is terminated. If not, kill it. Only `authoring-0` should be running now.
 3. Change the image tags to the new Crafter CMS version in the YAML files.
 4. Upgrade `nodes/resources/config/studio` configuration files to their new versions.
-5. `cd nodes` and run `kubectl apply -k .` (make sure `spec.replicas` is still 1, it's important that `authoring-1` is 
-NOT started since it's our backup in case the upgrade goes wrong). If the `authoring-0` pod is not automatically 
-terminated, terminate it. `authoring-0` should be restarted.
+5. `cd nodes` and run `kubectl apply -k .` (make sure `spec.replicas` and `MARIADB_CLUSTER_NODE_COUNT` are still 1, 
+it's important that `authoring-1` is *NOT* started since it's our backup in case the upgrade goes wrong). If the 
+`authoring-0` pod is not automatically terminated, terminate it. `authoring-0` should be restarted.
 6. Watch the log of `authoring_tomcat` container of the `authoring-0` pod for upgrade manager errors.
 7. If the upgrade manager fails:
     1. Save the `/opt/crafter/data`, the `/opt/crafter/logs` and the container log of the `authoring_tomcat` container.
