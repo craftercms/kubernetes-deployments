@@ -1,27 +1,30 @@
-# ALB Ingress
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: authoring-ingress
-  annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/healthcheck-port: '8080'
-    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
-    alb.ingress.kubernetes.io/healthcheck-path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
-    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
-    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=1800
-    alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=900
-spec:
-  rules:
-    - http:
-        paths:
-          - path: /*
-            backend:
-              serviceName: authoring-service-headless
-              servicePort: 8080
----
+# ----------------------------------------------------------------------------------------------------
+# Uncomment this section if you're deploying to an AWS EKS cluster and you want to use a LB
+# ----------------------------------------------------------------------------------------------------
+# # ALB Ingress
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: authoring-ingress
+#   annotations:
+#     kubernetes.io/ingress.class: alb
+#     alb.ingress.kubernetes.io/target-type: ip
+#     alb.ingress.kubernetes.io/scheme: internet-facing
+#     alb.ingress.kubernetes.io/healthcheck-port: '8080'
+#     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+#     alb.ingress.kubernetes.io/healthcheck-path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
+#     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+#     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=1800
+#     alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=900
+# spec:
+#   rules:
+#     - http:
+#         paths:
+#           - path: /*
+#             backend:
+#               serviceName: authoring-service-headless
+#               servicePort: 8080
+# ---
 # Authoring Headless service
 apiVersion: v1
 kind: Service
