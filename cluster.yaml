@@ -2,7 +2,7 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  version: "1.15"
+  version: "1.17"
   name: kuber-testing
   region: us-east-1
 
