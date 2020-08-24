@@ -3,6 +3,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: arbiter-service
+  labels:
+    hazelcastClusterName: studio_hazelcast_cluster
 spec:
   selector:
     component: arbiter
@@ -51,12 +53,15 @@ spec:
         component: arbiter
     spec:
       volumes:
+        - name: arbiter-config
+          configMap:
+            name: arbiter-config
         - name: logs
           emptyDir: {}
       containers:
         # Arbiter container
         - name: arbiter
-          image: craftercms/studio-arbiter:3.1.6E_BYOL
+          image: craftercms/studio-arbiter:3.1.9E_BYOL
           imagePullPolicy: "Always"
           readinessProbe:
             httpGet:
@@ -95,8 +100,10 @@ spec:
           volumeMounts:
             - name: logs
               mountPath: /opt/studio-arbiter/logs
+            - name: arbiter-config
+              subPath: hazelcast-config.yaml
+              mountPath: /opt/studio-arbiter/config/hazelcast-config.yaml
+              readOnly: true
           env:
             - name: CLUSTER_NAME
               value: studio_db_cluster
-            - name: CLUSTER_ADDRESS
-              value: authoring-service-headless.default.svc.cluster.local

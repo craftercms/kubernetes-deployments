@@ -5,10 +5,10 @@
 studio.repo.basePath: ${env:CRAFTER_DATA_DIR}/repos
 # Sandbox git repository branch for every site
 # studio.repo.siteSandboxBranch: master
-# If not using environment-config.xml, environments are configured here
-# Git repository branch for the `live` environment, default "live"
+# Git repository branch for publishing targets are configured here
+# Git repository branch for the `live` publishing target, default "live"
 # studio.repo.published.live: live
-# Git repository branch for the `staging` environment, default "staging"
+# Git repository branch for the `staging` publishing target, default "staging"
 # studio.repo.published.staging: staging
 
 ############################################################
@@ -27,7 +27,7 @@ studio.configuration.management.authorizationToken: ${env:STUDIO_MANAGEMENT_TOKE
 # Preview engine management authorization token.
 studio.configuration.management.previewAuthorizationToken: ${env:ENGINE_MANAGEMENT_TOKEN}
 # Protected URLs with preview engine management authorization token.
-# Coma separated list of preview engine urls
+# Comma separated list of preview engine urls
 studio.configuration.management.previewProtectedUrls: >-
   /api/1/monitoring/log.json,
   /api/1/monitoring/memory.json,
@@ -94,9 +94,9 @@ studio.db.socket: /tmp/MariaDB4j.${env:MARIADB_PORT}.sock
 # studio.security.type: ldap
 #
 # Salt for encrypting
-# studio.security.cipher.salt: TDEsDF8vx3gV4c7G
+studio.security.cipher.salt: ${env:CRAFTER_SYSTEM_ENCRYPTION_KEY}
 # Key for encrypting
-# studio.security.cipher.key: AoCcBdnsTa9R3DdG
+studio.security.cipher.key: ${env:CRAFTER_SYSTEM_ENCRYPTION_SALT}
 # Password requirements validation regular expression
 # The supported capture group keys are:
 #   hasNumbers
@@ -176,8 +176,6 @@ studio.security.encryption.salt: ${env:CRAFTER_ENCRYPTION_SALT}
 ###############################################################
 ##               SAML Security                               ##
 ###############################################################
-# SAML security enabled
-# studio.security.saml.enabled: true
 # SAML attribute name for email
 # studio.security.saml.attributeName.email: email
 # SAML attribute name for first name
@@ -200,6 +198,29 @@ studio.security.encryption.salt: ${env:CRAFTER_ENCRYPTION_SALT}
 # studio.security.saml.keystore.alias: crafterstudio
 # SAML logout URL
 # studio.security.saml.logoutUrl: /studio/saml/logout
+# Enable SAML configuration used when Studio is behind a reverse proxy or load balancer
+# studio.security.saml.reverseProxy.enabled: false
+# The header name that contains the public URL (matching the SAML SP URL) hostname
+# studio.security.saml.reverseProxy.forwardedHostHeaderName: X-Forwarded-Host
+# The header name that contains the public URL (matching the SAML SP URL) port
+# studio.security.saml.reverseProxy.forwardedPortHeaderName: X-Forwarded-Port
+# The header name that contains the public URL (matching the SAML SP URL) protocol
+# studio.security.saml.reverseProxy.forwardedProtoHeaderName: X-Forwarded-Proto
+# The scheme or protocol of the public URL (matching the SAML SP URL). Use if you wan to overwrite the forwarded header
+# studio.security.saml.reverseProxy.scheme:
+# The server name or hostname of the public URL (matching the SAML SP URL). Use if you wan to overwrite the forwarded header
+# studio.security.saml.reverseProxy.serverName:
+# The port of the public URL (matching the SAML SP URL). Use if you wan to overwrite the forwarded header
+# studio.security.saml.reverseProxy.serverPort: 0
+# The context path of the public URL (matching the SAML SP URL)
+# studio.security.saml.reverseProxy.contextPath:
+# SAML Web SSO profile options: authenticate the user silently
+# studio.security.saml.webSSOProfileOptions.passive: false
+# SAML Web SSO profile options: force user to re-authenticate
+# studio.security.saml.webSSOProfileOptions.forceAuthn: false
+
+# Defines name used for environment specific configuration. It is used for environment overrides in studio. Default value is default.
+studio.configuration.environment.active: ${env:CRAFTER_ENVIRONMENT}
 
 ##################################################
 ##        SMTP Configuration (Email)            ##
@@ -325,8 +346,6 @@ studio.db.cluster.nodes.local.synced.wait.timeout: 180
 # studio.cors.credentials: true
 # Value for the Access-Control-Max-Age header
 # studio.cors.maxage: -1
-# The active environment for multi environment configuration, e.g. qa, prod, dev
-# studio.configuration.environment.active: ENV
 
 ################################################################
 ##                           Search                           ##
@@ -337,12 +356,18 @@ studio.search.urls: ${env:ES_URL}
 studio.search.username: ${env:ES_USERNAME}
 # The password for Elasticsearch
 studio.search.password: ${env:ES_PASSWORD}
+# The connection timeout in milliseconds, if set to -1 the default will be used
+studio.search.timeout.connect: -1
+# The socket timeout in milliseconds, if set to -1 the default will be used
+studio.search.timeout.socket: -1
+# The number of threads to use, if set to -1 the default will be used
+studio.search.threads: -1
 
 ##########################################################
 ##                 Serverless Delivery                  ##
 ##########################################################
 # Indicates if serverless delivery is enabled
-# studio.serverless.delivery.enabled: true
+# studio.serverless.delivery.enabled: false
 # The URL for the serverless delivery deployer create URL
 # studio.serverless.delivery.deployer.target.createUrl: ${studio.preview.createTargetUrl}
 # The URL for the serverless delivery deployer delete URL
@@ -383,3 +408,10 @@ studio.search.password: ${env:ES_PASSWORD}
 #       cloudfrontCertificateArn:
 #       # The alternate domains names (besides *.cloudfront.net) for the CloudFront CDN (optional when target template is aws-cloudformed-s3)
 #       alternateCloudFrontDomainNames:
+
+##################################################
+##             Forwarded Headers                ##
+##################################################
+# Indicates if Forwarded or X-Forwarded headers should be used when resolving the client-originated protocol and
+# address. Enable when Studio is behind a reverse proxy or load balancer that sends these
+studio.forwarded.headers.enabled: false
