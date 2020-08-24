@@ -121,7 +121,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G"
         # Tomcat container
         - name: tomcat
-          image: craftercms/authoring_tomcat:3.1.9-SNAPSHOT
+          image: craftercms/authoring_tomcat:3.1.9
           imagePullPolicy: "Always"
           readinessProbe:
             httpGet:
@@ -156,7 +156,7 @@ spec:
               value: "-server -Xss1024K -Xms2G -Xmx4G" 
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.9-SNAPSHOT
+          image: craftercms/deployer:3.1.9
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
@@ -189,7 +189,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G"
         # Git SSH server container
         - name: git-ssh-server
-          image: craftercms/git_ssh_server:3.1.9-SNAPSHOT
+          image: craftercms/git_ssh_server:3.1.9
           imagePullPolicy: "Always"
           ports:
             - containerPort: 22
