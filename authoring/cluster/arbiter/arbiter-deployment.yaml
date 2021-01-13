@@ -61,7 +61,7 @@ spec:
       containers:
         # Arbiter container
         - name: arbiter
-          image: craftercms/studio-arbiter:3.1.11E_BYOL
+          image: craftercms/studio-arbiter:3.1.12E_BYOL
           imagePullPolicy: "Always"
           readinessProbe:
             httpGet:
