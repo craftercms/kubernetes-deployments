@@ -13,9 +13,16 @@ fi
 echo "------------------------------------------------------------------------"
 echo "Installing ALB Ingress Controller"
 echo "------------------------------------------------------------------------"
-helm upgrade alb-ingress-controller incubator/aws-alb-ingress-controller \
+
+helm repo add eks https://aws.github.io/eks-charts
+
+kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller//crds?ref=master"
+
+helm upgrade aws-load-balancer-controller eks/aws-load-balancer-controller \
   --install \
-  --version=1.0.2 \
-  --namespace=default \
-  --values=$SCRIPT_HOME/alb-ingress-config.yaml
+  --namespace=kube-system \
+  --set clusterName=kuber-testing \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller
+
 echo ""
