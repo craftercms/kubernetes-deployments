@@ -61,18 +61,18 @@ spec:
       containers:
         # Arbiter container
         - name: arbiter
-          image: craftercms/studio-arbiter:3.1.13E_BYOL
+          image: craftercms/studio-arbiter:3.1.14E_BYOL
           imagePullPolicy: "Always"
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: 8080
             initialDelaySeconds: 30
             failureThreshold: 4
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: 8080
             initialDelaySeconds: 120
             failureThreshold: 10
