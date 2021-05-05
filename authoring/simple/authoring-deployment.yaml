@@ -126,7 +126,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G"
         # Tomcat container
         - name: tomcat
-          image: craftercms/authoring_tomcat:3.1.14-SNAPSHOT
+          image: craftercms/authoring_tomcat:3.1.14
           imagePullPolicy: "Always"
           readinessProbe:
             httpGet:
@@ -157,7 +157,7 @@ spec:
               value: "-server -Xss1024K -Xms2G -Xmx4G" 
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.14-SNAPSHOT
+          image: craftercms/deployer:3.1.14
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
@@ -192,7 +192,7 @@ spec:
         # Uncomment if using the Git SSH server instead of the Git HTTPS server
         # Git SSH server container
         # - name: git-ssh-server
-        #   image: craftercms/git_ssh_server:3.1.14-SNAPSHOT
+        #   image: craftercms/git_ssh_server:3.1.14
         #   imagePullPolicy: "Always"
         #   ports:
         #     - containerPort: 22
@@ -204,7 +204,7 @@ spec:
         #       mountPath: /opt/crafter/data
         # Git HTTPS server container
         - name: git-https-server
-          image: craftercms/git_https_server:3.1.14-SNAPSHOT
+          image: craftercms/git_https_server:3.1.14
           imagePullPolicy: "Always"
           ports:
             - containerPort: 443

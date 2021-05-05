@@ -108,7 +108,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G"
         # Tomcat container
         - name: tomcat
-          image: craftercms/delivery_tomcat:3.1.14-SNAPSHOT
+          image: craftercms/delivery_tomcat:3.1.14
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status.json?token=defaultManagementToken
@@ -138,7 +138,7 @@ spec:
               value: "-server -Xss1024K -Xms1G -Xmx3G"
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.14-SNAPSHOT
+          image: craftercms/deployer:3.1.14
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
