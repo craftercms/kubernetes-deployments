@@ -259,7 +259,8 @@ spec:
                   name: git-https-server-credentials
                   key: password
             - name: MARIADB_CLUSTER_NODE_COUNT
-              # This should match the replica count
+              # This should match the replica count. Also update the config/studio/.gitconfig to specify sslVerify false
+              # for the HTTPS URL of every replica/cluster node (if using a self-signed cert in Git HTTPS server)
               value: "2"
         # Deployer container
         - name: deployer

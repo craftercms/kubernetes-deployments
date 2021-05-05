@@ -8,6 +8,8 @@ configMapGenerator:
     files:
       - resources/config/studio/studio-config-override.yaml
       - resources/config/studio/hazelcast-config.yaml
+      # This is only needed if the SSL cert used by the Git HTTPS Server are self-signed. Try to use an actual,
+      # verified certificate if possible
       - resources/config/studio/.gitconfig
 secretGenerator:
   - name: crafter-license
