@@ -3,6 +3,8 @@ kind: Kustomization
 resources:
   - delivery-deployment.yaml
 configMapGenerator:
+  # This is only needed if the SSL cert used by Authoring's Git HTTPS Server are self-signed. Try to use an actual,
+  # verified certificate if possible
   - name: deployer-config
     files:
       - resources/config/deployer/.gitconfig
