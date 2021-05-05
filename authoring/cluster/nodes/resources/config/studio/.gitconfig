@@ -1,0 +1,2 @@
+[http "https://*.authoring-service-headless.default.svc.cluster.local"]
+	sslVerify = false

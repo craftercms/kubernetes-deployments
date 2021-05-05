@@ -259,7 +259,8 @@ studio.mail.port: ${env:MAIL_PORT}
 # Cluster Git URL format for synching members. 
 # - Typical SSH URL format: ssh://{username}@{localAddress}{absolutePath}
 # - Typical HTTPS URL format: https://{localAddress}/repos/sites
-studio.clustering.sync.urlFormat: ssh://{username}@{localAddress}{absolutePath}
+# studio.clustering.sync.urlFormat: ssh://{username}@{localAddress}{absolutePath}
+studio.clustering.sync.urlFormat: https://{localAddress}/repos/sites
 
 # Cluster Syncers
 # Cluster member after heartbeat stale for amount of minutes will be declared inactive
@@ -278,11 +279,11 @@ studio.clustering.node.registration:
 #   - none (no authentication needed)
 #   - basic (username/password authentication)
 #   - key (ssh authentication)
- authenticationType: none
+ authenticationType: basic
 #  Username to access this server's local repository
-#  username: user
+ username: ${env:CLUSTER_USERNAME}
 #  Password to access this server's local repository
-#  password: SuperSecurePassword
+ password: ${env:CLUSTER_PASSWORD}
 #  Private key to access this server's local repository (multiline string)
 #  privateKey: |
 #    -----BEGIN PRIVATE KEY-----

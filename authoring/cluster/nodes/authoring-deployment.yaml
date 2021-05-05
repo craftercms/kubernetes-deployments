@@ -41,10 +41,15 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
-    - name: ssh
+    # Uncomment if using the Git SSH server instead of the Git HTTPS server
+    # - name: git-ssh
+    #   protocol: TCP
+    #   port: 22
+    #   targetPort: 22
+    - name: git-https
       protocol: TCP
-      port: 22
-      targetPort: 22
+      port: 443
+      targetPort: 443
     - name: db-default
       protocol: TCP
       port: 3306
@@ -70,7 +75,7 @@ spec:
       port: 5701
       targetPort: 5701
 ---
-# Authoring non-headless service (mainly for SSH Git access from Delivery)
+# Authoring non-headless service (mainly for SSH/HTTPS Git access from Delivery)
 apiVersion: v1
 kind: Service
 metadata:
@@ -79,10 +84,13 @@ spec:
   selector:
     component: authoring
   ports:
-    - name: ssh
-      protocol: TCP
-      port: 22
-      targetPort: 22
+    # Uncomment if using the Git SSH server instead of the Git HTTPS server
+    # - name: git-ssh
+    #   port: 22
+    #   targetPort: 22
+    - name: git-https
+      port: 443
+      targetPort: 443
 ---
 # Authoring Deployment
 apiVersion: apps/v1
@@ -112,15 +120,19 @@ spec:
         component: authoring
     spec:
       volumes:
-        - name: ssh-keys
+        # Uncomment if using the Git SSH server instead of the Git HTTPS server
+        # - name: ssh-keys
+        #   secret:
+        #     secretName: ssh-keys
+        - name: git-https-server-cert-files
           secret:
-            secretName: authoring-ssh-keys    
+            secretName: git-https-server-cert-files    
         - name: crafter-license
           secret:
-            secretName: authoring-crafter-license
+            secretName: crafter-license
         - name: studio-config
           configMap:
-            name: authoring-studio-config
+            name: studio-config
         - name: logs
           emptyDir: {}
         - name: temp
@@ -159,7 +171,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G"
         # Tomcat container
         - name: tomcat
-          image: craftercms/authoring_tomcat:3.1.13E_BYOL
+          image: craftercms/authoring_tomcat:3.1.14E-BETA_BYOL
           imagePullPolicy: "Always"
           readinessProbe:
             httpGet:
@@ -202,10 +214,11 @@ spec:
             - name: crafter-license
               subPath: crafter.lic
               mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/license/crafter.lic
-              readOnly: true          
-            - name: ssh-keys
-              mountPath: /opt/crafter/.ssh
               readOnly: true
+            # Uncomment if using the Git SSH server instead of the Git HTTPS server       
+            # - name: ssh-keys
+            #   mountPath: /opt/crafter/.ssh
+            #   readOnly: true
             - name: data
               mountPath: /opt/crafter/data
             - name: temp
@@ -220,6 +233,10 @@ spec:
               subPath: hazelcast-config.yaml
               mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/studio/extension/hazelcast-config.yaml
               readOnly: true
+            - name: studio-config
+              subPath: .gitconfig
+              mountPath: /home/crafter/.gitconfig
+              readOnly: true
           env:
             - name: CATALINA_OPTS
               value: "-server -Xss1024K -Xms2G -Xmx6G"
@@ -231,12 +248,22 @@ spec:
                   fieldPath: metadata.name
             - name: CLUSTER_NODE_ADDRESS
               value: "$(POD_NAME).authoring-service-headless.default.svc.cluster.local"
+            - name: CLUSTER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: git-https-server-credentials
+                  key: username
+            - name: CLUSTER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: git-https-server-credentials
+                  key: password
             - name: MARIADB_CLUSTER_NODE_COUNT
               # This should match the replica count
               value: "2"
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.13E_BYOL
+          image: craftercms/deployer:3.1.14E-BETA_BYOL
           imagePullPolicy: "Always"
           readinessProbe:
             httpGet:
@@ -265,15 +292,44 @@ spec:
           env:
             - name: DEPLOYER_JAVA_OPTS
               value: "-server -Xss1024K -Xmx2G"
+        # Uncomment if using the Git SSH server instead of the Git HTTPS server
         # Git SSH server container
-        - name: git-ssh-server
-          image: craftercms/git_ssh_server:3.1.13E_BYOL
+        # - name: git-ssh-server
+        #   image: craftercms/git_ssh_server:3.1.14E-BETA_BYOL
+        #   imagePullPolicy: "Always"
+        #   ports:
+        #     - containerPort: 22
+        #   volumeMounts:
+        #     - name: ssh-keys
+        #       mountPath: /opt/crafter/.ssh
+        #       readOnly: true
+        #     - name: data
+        #       mountPath: /opt/crafter/data
+        # Git HTTPS server container
+        - name: git-https-server
+          image: craftercms/git_https_server:3.1.14E-BETA_BYOL
           imagePullPolicy: "Always"
           ports:
-            - containerPort: 22
+            - containerPort: 443
           volumeMounts:
-            - name: ssh-keys
-              mountPath: /opt/crafter/.ssh
+            - name: git-https-server-cert-files
+              subPath: server.crt
+              mountPath: /usr/local/apache2/conf/server.crt
+              readOnly: true
+            - name: git-https-server-cert-files
+              subPath: server.key
+              mountPath: /usr/local/apache2/conf/server.key
               readOnly: true
             - name: data
               mountPath: /opt/crafter/data
+          env:
+            - name: GIT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: git-https-server-credentials
+                  key: username
+            - name: GIT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: git-https-server-credentials
+                  key: password

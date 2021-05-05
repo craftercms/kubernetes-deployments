@@ -4,18 +4,31 @@ resources:
   - hazelcast-rbac.yaml
   - authoring-deployment.yaml
 configMapGenerator:
-  - name: authoring-studio-config
+  - name: studio-config
     files:
       - resources/config/studio/studio-config-override.yaml
       - resources/config/studio/hazelcast-config.yaml
+      - resources/config/studio/.gitconfig
 secretGenerator:
-  - name: authoring-crafter-license
+  - name: crafter-license
     files:
       - resources/secrets/crafter.lic
-  - name: authoring-ssh-keys
+  # Uncomment if using the Git SSH server instead of the Git HTTPS server
+  # - name: ssh-keys
+  #   files:
+  #     # Please remember to generate missing files
+  #     - resources/secrets/.ssh/authorized_keys
+  #     - resources/secrets/.ssh/config
+  #     - resources/secrets/.ssh/id_rsa
+  #     - resources/secrets/.ssh/id_rsa.pub
+  - name: git-https-server-cert-files
     files:
       # Please remember to generate missing files
-      - resources/secrets/.ssh/authorized_keys
-      - resources/secrets/.ssh/config
-      - resources/secrets/.ssh/id_rsa
-      - resources/secrets/.ssh/id_rsa.pub
+      - resources/secrets/git-https-server/server.crt
+      - resources/secrets/git-https-server/server.key
+  - name: git-https-server-credentials
+    literals:
+      # NEVER USE THESE IN PROD! These are only provided for demo/testing. Generate the secrets manually with kubectl 
+      # or use something like https://github.com/external-secrets/kubernetes-external-secrets
+      - username=crafter
+      - password=crafter
