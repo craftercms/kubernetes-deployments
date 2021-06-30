@@ -9,4 +9,4 @@
 
 - [Authoring cluster with embedded DB (enterprise only)](authoring/cluster)
 - [Simple Authoring with a single instance](authoring/simple)
-- [Simple Delivery with 2 instances pulling from an Authoring cluster or a single Authoring](delivery/simple)
+- [Simple Delivery with a single instance pulling from an Authoring cluster or a single Authoring](delivery/simple)
