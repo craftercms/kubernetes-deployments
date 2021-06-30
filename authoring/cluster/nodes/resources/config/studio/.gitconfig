@@ -1,0 +1,7 @@
+# Add a http.*.sslVerify section for every node in the cluster
+
+[http "https://authoring-0.authoring-service-headless.default.svc.cluster.local/"]
+	sslVerify = false
+
+[http "https://authoring-1.authoring-service-headless.default.svc.cluster.local/"]
+	sslVerify = false

@@ -248,18 +248,17 @@ studio.mail.port: ${env:MAIL_PORT}
 ##                 Clustering                   ##
 ##################################################
 # -------------------------------------------------------------------------------------
-# IMPORTANT: When enabling clustering, please specify the following Spring profiles
-# in your crafter-setenv.sh depending on the DB:
-#  - SPRING_PROFILES_ACTIVE=crafter.studio.externalDb if you want to use an external DB
-#  - SPRING_PROFILES_ACTIVE=crafter.studio.dbCluster if you want Studio to cluster 
-#    the embedded MariaDB with other Studios' embedded MariaDBs. You will need to 
-#    uncomment the Hazelcast and Galera property sections too
+# IMPORTANT: To enable clustering, please specify the following Spring profiles
+# in your crafter-setenv.sh:
+#  - SPRING_PROFILES_ACTIVE=crafter.studio.dbCluster  
+#    You will need to uncomment the Hazelcast and Studio DB Cluster property sections too 
 # -------------------------------------------------------------------------------------
 
 # Cluster Git URL format for synching members. 
 # - Typical SSH URL format: ssh://{username}@{localAddress}{absolutePath}
 # - Typical HTTPS URL format: https://{localAddress}/repos/sites
-studio.clustering.sync.urlFormat: ssh://{username}@{localAddress}{absolutePath}
+# studio.clustering.sync.urlFormat: ssh://{username}@{localAddress}{absolutePath}
+studio.clustering.sync.urlFormat: https://{localAddress}/repos/sites
 
 # Cluster Syncers
 # Cluster member after heartbeat stale for amount of minutes will be declared inactive
@@ -271,18 +270,18 @@ studio.clustering.sync.urlFormat: ssh://{username}@{localAddress}{absolutePath}
 # Cluster node registration data, remember to uncomment the next line
 studio.clustering.node.registration:
 #  This server's local address (reachable to other cluster members). You can also specify a different port by 
-#  attaching :PORT to the adddress (e.g 192.168.1.200:2222)
+#  attaching :PORT to the address (e.g 192.168.1.200:2222)
  localAddress: ${env:CLUSTER_NODE_ADDRESS}
 #  Authentication type to access this server's local repository
 #  possible values
 #   - none (no authentication needed)
 #   - basic (username/password authentication)
 #   - key (ssh authentication)
- authenticationType: none
+ authenticationType: basic
 #  Username to access this server's local repository
-#  username: user
+ username: ${env:CLUSTER_USERNAME}
 #  Password to access this server's local repository
-#  password: SuperSecurePassword
+ password: ${env:CLUSTER_PASSWORD}
 #  Private key to access this server's local repository (multiline string)
 #  privateKey: |
 #    -----BEGIN PRIVATE KEY-----
