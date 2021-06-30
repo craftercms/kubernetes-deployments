@@ -1,30 +1,3 @@
-# ----------------------------------------------------------------------------------------------------
-# Uncomment this section if you're deploying to an AWS EKS cluster and you want to use a LB
-# ----------------------------------------------------------------------------------------------------
-# # ALB Ingress
-# apiVersion: extensions/v1beta1
-# kind: Ingress
-# metadata:
-#   name: authoring-ingress
-#   annotations:
-#     kubernetes.io/ingress.class: alb
-#     alb.ingress.kubernetes.io/target-type: ip
-#     alb.ingress.kubernetes.io/scheme: internet-facing
-#     alb.ingress.kubernetes.io/healthcheck-port: '8080'
-#     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
-#     alb.ingress.kubernetes.io/healthcheck-path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
-#     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
-#     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=1800
-#     alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=900
-# spec:
-#   rules:
-#     - http:
-#         paths:
-#           - path: /*
-#             backend:
-#               serviceName: authoring-service-headless
-#               servicePort: 8080
-# ---
 # Authoring Headless service, needed for stable DNS entries of StatefulSet members.
 apiVersion: v1
 kind: Service
@@ -126,7 +99,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G"
         # Tomcat container
         - name: tomcat
-          image: craftercms/authoring_tomcat:3.1.14
+          image: craftercms/authoring_tomcat:3.1.15
           imagePullPolicy: "Always"
           readinessProbe:
             httpGet:
@@ -157,7 +130,7 @@ spec:
               value: "-server -Xss1024K -Xms2G -Xmx4G" 
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.14
+          image: craftercms/deployer:3.1.15
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
@@ -192,7 +165,7 @@ spec:
         # Uncomment if using the Git SSH server instead of the Git HTTPS server
         # Git SSH server container
         # - name: git-ssh-server
-        #   image: craftercms/git_ssh_server:3.1.14
+        #   image: craftercms/git_ssh_server:3.1.15
         #   imagePullPolicy: "Always"
         #   ports:
         #     - containerPort: 22
@@ -204,7 +177,7 @@ spec:
         #       mountPath: /opt/crafter/data
         # Git HTTPS server container
         - name: git-https-server
-          image: craftercms/git_https_server:3.1.14
+          image: craftercms/git_https_server:3.1.15
           imagePullPolicy: "Always"
           ports:
             - containerPort: 443
