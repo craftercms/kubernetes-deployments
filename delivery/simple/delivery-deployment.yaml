@@ -79,10 +79,10 @@ spec:
             - name: bootstrap.memory_lock
               value: "true"
             - name: ES_JAVA_OPTS
-              value: "-server -Xss1024K -Xmx2G"
+              value: "-server -Xss1024K -Xmx2G -Dlog4j2.formatMsgNoLookups=true"
         # Tomcat container
         - name: tomcat
-          image: craftercms/delivery_tomcat:3.1.17.3
+          image: craftercms/delivery_tomcat:3.1.17.4
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status.json?token=defaultManagementToken
@@ -109,10 +109,10 @@ spec:
               mountPath: /opt/crafter/logs
           env:
             - name: CATALINA_OPTS
-              value: "-server -Xss1024K -Xms1G -Xmx3G"
+              value: "-server -Xss1024K -Xms1G -Xmx3G -Dlog4j2.formatMsgNoLookups=true"
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.17.3
+          image: craftercms/deployer:3.1.17.4
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
@@ -147,4 +147,4 @@ spec:
               mountPath: /opt/crafter/logs
           env:
             - name: DEPLOYER_JAVA_OPTS
-              value: "-server -Xss1024K -Xmx2G"
+              value: "-server -Xss1024K -Xmx2G -Dlog4j2.formatMsgNoLookups=true"
