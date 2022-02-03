@@ -82,7 +82,7 @@ spec:
               value: "-server -Xss1024K -Xmx2G -Dlog4j2.formatMsgNoLookups=true"
         # Tomcat container
         - name: tomcat
-          image: craftercms/delivery_tomcat:3.1.18
+          image: craftercms/delivery_tomcat:3.1.19
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status.json?token=defaultManagementToken
@@ -112,7 +112,7 @@ spec:
               value: "-server -Xss1024K -Xms1G -Xmx3G -Dlog4j2.formatMsgNoLookups=true"
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.18
+          image: craftercms/deployer:3.1.19
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
