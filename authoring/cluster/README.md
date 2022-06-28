@@ -2,7 +2,7 @@
 
 Enterprise images are required for running an Authoring cluster with embedded DB
 
-**NOTE** This section needs an update once the kubernetes deployment files for primary/replica clustering are updated [here](https://github.com/craftercms/craftercms/issues/5285)
+**NOTE** This README needs an update once the kubernetes deployment files for primary/replica clustering are updated [here](https://github.com/craftercms/craftercms/issues/5285)
 
 ## Start the cluster
 
