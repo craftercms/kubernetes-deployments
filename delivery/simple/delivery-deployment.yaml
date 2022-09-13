@@ -1,30 +1,3 @@
-# ----------------------------------------------------------------------------------------------------
-# Uncomment this section if you're deploying to an AWS EKS cluster and you want to use a LB
-# ----------------------------------------------------------------------------------------------------
-# # ALB Ingress
-# apiVersion: extensions/v1beta1
-# kind: Ingress
-# metadata:
-#   name: delivery-ingress
-#   annotations:
-#     kubernetes.io/ingress.class: alb
-#     alb.ingress.kubernetes.io/target-type: ip
-#     alb.ingress.kubernetes.io/scheme: internet-facing
-#     alb.ingress.kubernetes.io/healthcheck-port: '8080'
-#     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
-#     alb.ingress.kubernetes.io/healthcheck-path: /api/1/monitoring/status.json?token=defaultManagementToken
-#     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
-#     alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=900
-# spec:
-#   rules:
-#     - http:
-#         paths:
-#           - path: /*
-#             backend:
-#               serviceName: delivery-service-headless
-#               servicePort: 8080
-# ---
-# Delivery Headless service, needed for stable DNS entries of StatefulSet members.
 apiVersion: v1
 kind: Service
 metadata:
@@ -73,18 +46,12 @@ spec:
       containers:
         # Elasticsearch container
         - name: elasticsearch
-          image: docker.elastic.co/elasticsearch/elasticsearch:6.8.6
+          image: docker.elastic.co/elasticsearch/elasticsearch:7.17.1
           readinessProbe:
             httpGet:
               path: /_cat/nodes?h=uptime
               port: 9200
             initialDelaySeconds: 15
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /_cat/nodes?h=uptime
-              port: 9200
-            initialDelaySeconds: 60
             periodSeconds: 10
           ports:
             - containerPort: 9200
@@ -98,26 +65,35 @@ spec:
           env:
             - name: discovery.type
               value: single-node
-            - name: bootstrap.memory_lock
-              value: "true"
             - name: ES_JAVA_OPTS
-              value: "-server -Xss1024K -Xmx2G"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2.5Gi
+            limits:
+              cpu: 1
+              memory: 2.5Gi
         # Tomcat container
         - name: tomcat
-          image: craftercms/delivery_tomcat:3.1.9-SNAPSHOT
+          image: craftercms/delivery_tomcat:4.0.1
+          startupProbe:
+            httpGet:
+              path: /api/1/monitoring/status.json?token=defaultManagementToken
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 60
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status.json?token=defaultManagementToken
               port: 8080
-            initialDelaySeconds: 60
-            failureThreshold: 55
+            failureThreshold: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /api/1/monitoring/status.json?token=defaultManagementToken
               port: 8080
-            initialDelaySeconds: 600
-            failureThreshold: 5
+            failureThreshold: 10
             timeoutSeconds: 60
             periodSeconds: 60
           ports:
@@ -134,25 +110,36 @@ spec:
               mountPath: /opt/crafter/logs
           env:
             - name: CATALINA_OPTS
-              value: "-server -Xss1024K -Xms1G -Xmx3G"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+          resources:
+            requests:
+              cpu: 1
+              memory: 4Gi
+            limits:
+              cpu: 2
+              memory: 4Gi
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.9-SNAPSHOT
+          image: craftercms/deployer:4.0.1
+          startupProbe:
+            httpGet:
+              path: /api/1/monitoring/status?token=defaultManagementToken
+              port: 9191
+            failureThreshold: 60
+            periodSeconds: 60
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
               port: 9191
-            initialDelaySeconds: 30
-            failureThreshold: 16
+            failureThreshold: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
               port: 9191
-            initialDelaySeconds: 180
             failureThreshold: 10
             timeoutSeconds: 60
-            periodSeconds: 60  
+            periodSeconds: 60
           ports:
             - containerPort: 9191
           volumeMounts:
@@ -167,4 +154,11 @@ spec:
               mountPath: /opt/crafter/logs
           env:
             - name: DEPLOYER_JAVA_OPTS
-              value: "-server -Xss1024K -Xmx2G"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2.5Gi
+            limits:
+              cpu: 1
+              memory: 2.5Gi

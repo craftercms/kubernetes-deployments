@@ -90,18 +90,12 @@ spec:
       containers:
         # Elasticsearch container for internal authoring/preview search
         - name: elasticsearch
-          image: docker.elastic.co/elasticsearch/elasticsearch:6.8.6
+          image: docker.elastic.co/elasticsearch/elasticsearch:7.17.1
           readinessProbe:
             httpGet:
               path: /_cat/nodes?h=uptime
               port: 9200
             initialDelaySeconds: 15
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /_cat/nodes?h=uptime
-              port: 9200
-            initialDelaySeconds: 60
             periodSeconds: 10
           ports:
             - containerPort: 9200
@@ -115,26 +109,35 @@ spec:
           env:
             - name: discovery.type
               value: single-node
-            - name: bootstrap.memory_lock
-              value: "true"
             - name: ES_JAVA_OPTS
-              value: "-server -Xss1024K -Xmx2G"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2.5Gi
+            limits:
+              cpu: 1
+              memory: 2.5Gi
         # Tomcat container
         - name: tomcat
-          image: craftercms/authoring_tomcat:3.1.9-SNAPSHOT
+          image: craftercms/authoring_tomcat:4.0.1
           imagePullPolicy: "Always"
+          startupProbe:
+            httpGet:
+              path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
+              port: 8080
+            failureThreshold: 60
+            periodSeconds: 60
           readinessProbe:
             httpGet:
               path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
               port: 8080
-            initialDelaySeconds: 60
-            failureThreshold: 55
+            failureThreshold: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
               port: 8080
-            initialDelaySeconds: 600
             failureThreshold: 10
             timeoutSeconds: 60
             periodSeconds: 60
@@ -153,22 +156,33 @@ spec:
               mountPath: /opt/crafter/logs
           env:
             - name: CATALINA_OPTS
-              value: "-server -Xss1024K -Xms2G -Xmx4G" 
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+          resources:
+            requests:
+              cpu: 1
+              memory: 5Gi
+            limits:
+              cpu: 2
+              memory: 5Gi
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:3.1.9-SNAPSHOT
+          image: craftercms/deployer:4.0.1
+          startupProbe:
+            httpGet:
+              path: /api/1/monitoring/status?token=defaultManagementToken
+              port: 9191
+            failureThreshold: 60
+            periodSeconds: 60
           readinessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
               port: 9191
-            initialDelaySeconds: 30
-            failureThreshold: 16
+            failureThreshold: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
               port: 9191
-            initialDelaySeconds: 180
             failureThreshold: 10
             timeoutSeconds: 60
             periodSeconds: 60  
@@ -186,10 +200,17 @@ spec:
               mountPath: /opt/crafter/logs
           env:
             - name: DEPLOYER_JAVA_OPTS
-              value: "-server -Xss1024K -Xmx2G"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2.5Gi
+            limits:
+              cpu: 1
+              memory: 2.5Gi
         # Git SSH server container
         - name: git-ssh-server
-          image: craftercms/git_ssh_server:3.1.9-SNAPSHOT
+          image: craftercms/git_ssh_server:4.0.1
           imagePullPolicy: "Always"
           ports:
             - containerPort: 22

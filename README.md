@@ -2,22 +2,13 @@
 
 ## Pre-requisites
 
-1. Install eksctl
-2. Install Helm 3
+1. Install kubectl
+2. Have a Kubernetes cluster available. For testing we recommend `minikube`
 
-## Create a simple EKS cluster with a single worker node
+If using `minikube`, please do the following:
 
-`eksctl create cluster -f cluster.yaml`
-
-## Install ALB ingress controller
-
-```
-helm upgrade alb-ingress-controller incubator/aws-alb-ingress-controller \
-  --install \
-  --version=0.1.13\
-  --namespace=kube-system \
-  --values=alb-ingress-config.yaml
-```
+<!-- - Start `minikube` with a higher `ulimit` (required for Elasticsearch: `minikube start --docker-opt="default-ulimit=nofile=65535:65535"` -->
+- Run this command to avoid failing to download the `craftercms/authoring_tomcat` image: `minikube image pull craftercms/authoring_tomcat:4.0.1`
 
 ## Deployments
 

@@ -10,6 +10,8 @@ studio.repo.basePath: ${env:CRAFTER_DATA_DIR}/repos
 # studio.repo.published.live: live
 # Git repository branch for the `staging` publishing target, default "staging"
 # studio.repo.published.staging: staging
+# If Git CLI should be used for some Git operations, for better performance (Git CLI needs to be installed beforehand)
+# studio.repo.git.cli.enabled: true
 
 ############################################################
 ##                   Site Configuration                   ##
@@ -39,6 +41,7 @@ studio.configuration.management.previewProtectedUrls: >-
   /api/1/site/context/graphql/rebuild,
   /api/1/site/cache/clear,
   /api/1/site/cache/statistics
+
 ############################################################
 ##                    Preview Deployer                    ##
 ############################################################
@@ -64,7 +67,7 @@ studio.preview.search.deleteUrl: ${env:SEARCH_URL}/api/2/admin/index/delete/{sit
 # Crafter DB schema name
 studio.db.schema: ${env:MARIADB_SCHEMA}
 # Crafter DB connection string
-studio.db.url: jdbc:mariadb://${env:MARIADB_HOST}:${env:MARIADB_PORT}/${env:MARIADB_SCHEMA}?user=${env:MARIADB_USER}&password=${env:MARIADB_PASSWD}
+studio.db.url: jdbc:mariadb://${env:MARIADB_HOST}:${env:MARIADB_PORT}/${env:MARIADB_SCHEMA}?user=${env:MARIADB_USER}&password=${env:MARIADB_PASSWD}&socketTimeout=${env:MARIADB_SOCKET_TIMEOUT}
 # Connection string used to initialize database. This creates the `crafter` schema, the `crafter` user and/or upgrades the database
 studio.db.initializer.url: jdbc:mariadb://${env:MARIADB_HOST}:${env:MARIADB_PORT}?user=${env:MARIADB_ROOT_USER}&password=${env:MARIADB_ROOT_PASSWD}
 # Connection string if using a database with an already created schema and user (like AWS RDS)
@@ -85,8 +88,10 @@ studio.db.socket: /tmp/MariaDB4j.${env:MARIADB_PORT}.sock
 # studio.db.initializer.randomAdminPassword.length: 16
 # Random admin password allowed chars
 # studio.db.initializer.randomAdminPassword.chars: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*_=+-/
-# HTTP Session timeout for studio (value is in minutes).
-# studio.security.sessionTimeout: 60
+# Time in minutes after which active users will be required to login again
+# studio.security.sessionTimeout: 480
+# Time in minutes after which inactive users will be required to login again
+# studio.security.inactivityTimeout: 30
 # Defines security provider for accessing repository. Possible values
 # - db (users are stored in database)
 # - ldap (users are imported from LDAP into the database)
@@ -94,9 +99,9 @@ studio.db.socket: /tmp/MariaDB4j.${env:MARIADB_PORT}.sock
 # studio.security.type: ldap
 #
 # Salt for encrypting
-# studio.security.cipher.salt: TDEsDF8vx3gV4c7G
+studio.security.cipher.salt: ${env:CRAFTER_SYSTEM_ENCRYPTION_SALT}
 # Key for encrypting
-# studio.security.cipher.key: AoCcBdnsTa9R3DdG
+studio.security.cipher.key: ${env:CRAFTER_SYSTEM_ENCRYPTION_KEY}
 # Password requirements validation regular expression
 # The supported capture group keys are:
 #   hasNumbers
@@ -219,6 +224,9 @@ studio.security.encryption.salt: ${env:CRAFTER_ENCRYPTION_SALT}
 # SAML Web SSO profile options: force user to re-authenticate
 # studio.security.saml.webSSOProfileOptions.forceAuthn: false
 
+# The path of the folder used for the SSH configuration
+studio.security.ssh.config: ${env:CRAFTER_SSH_CONFIG}
+
 # Defines name used for environment specific configuration. It is used for environment overrides in studio. Default value is default.
 studio.configuration.environment.active: ${env:CRAFTER_ENVIRONMENT}
 
@@ -248,12 +256,10 @@ studio.mail.port: ${env:MAIL_PORT}
 ##                 Clustering                   ##
 ##################################################
 # -------------------------------------------------------------------------------------
-# IMPORTANT: When enabling clustering, please specify the following Spring profiles
-# in your crafter-setenv.sh depending on the DB:
-#  - SPRING_PROFILES_ACTIVE=crafter.studio.externalDb if you want to use an external DB
-#  - SPRING_PROFILES_ACTIVE=crafter.studio.dbCluster if you want Studio to cluster 
-#    the embedded MariaDB with other Studios' embedded MariaDBs. You will need to 
-#    uncomment the Hazelcast and Galera property sections too
+# IMPORTANT: To enable clustering, please specify the following Spring profile
+# in your crafter-setenv.sh:
+#  - SPRING_PROFILES_ACTIVE=crafter.studio.dbCluster 
+#    You will need to uncomment the Hazelcast and Studio DB Cluster property sections too
 # -------------------------------------------------------------------------------------
 
 # Cluster Git URL format for synching members. 
@@ -262,12 +268,6 @@ studio.mail.port: ${env:MAIL_PORT}
 # studio.clustering.sync.urlFormat: ssh://{username}@{localAddress}{absolutePath}
 
 # Cluster Syncers
-# Sandbox Sync Job interval in milliseconds which is how often to sync the work-area
-# studio.clustering.sandboxSyncJob.interval: 2000
-# Published Sync Job interval in milliseconds which is how often to sync the published repos
-# studio.clustering.publishedSyncJob.interval: 60000
-# Global Repo Sync Job interval in milliseconds which is how often to sync the global repo
-# studio.clustering.globalRepoSyncJob.interval: 45000
 # Cluster member after heartbeat stale for amount of minutes will be declared inactive
 # studio.clustering.heartbeatStale.timeLimit: 5
 # Cluster member after being inactive for amount of minutes will be removed from cluster
@@ -277,7 +277,7 @@ studio.mail.port: ${env:MAIL_PORT}
 # Cluster node registration data, remember to uncomment the next line
 # studio.clustering.node.registration:
 #  This server's local address (reachable to other cluster members). You can also specify a different port by 
-#  attaching :PORT to the adddress (e.g 192.168.1.200:2222)
+#  attaching :PORT to the address (e.g 192.168.1.200:2222)
 #  localAddress: ${env:CLUSTER_NODE_ADDRESS}
 #  Authentication type to access this server's local repository
 #  possible values
@@ -362,14 +362,14 @@ studio.search.timeout.connect: -1
 studio.search.timeout.socket: -1
 # The number of threads to use, if set to -1 the default will be used
 studio.search.threads: -1
+# Indicates if keep alive should be enabled for sockets used by the search client, defaults to false
+studio.search.keepAlive: false
 
 ##########################################################
 ##                 Serverless Delivery                  ##
 ##########################################################
 # Indicates if serverless delivery is enabled
-# studio.serverless.delivery.enabled: true
-# Indicates if the local (preview) Deployer is going to be used for serverless deployments
-# studio.serverless.delivery.deployer.local: true
+# studio.serverless.delivery.enabled: false
 # The URL for the serverless delivery deployer create URL
 # studio.serverless.delivery.deployer.target.createUrl: ${studio.preview.createTargetUrl}
 # The URL for the serverless delivery deployer delete URL
@@ -378,10 +378,12 @@ studio.search.threads: -1
 # studio.serverless.delivery.deployer.target.template: aws-cloudformed-s3
 # Replace existing target configuration if one exists?
 # studio.serverless.delivery.deployer.target.replace: false
-# The URL of the site repo that the Deployer needs to upload to the bucket needed by serverless delivery. If using the
-# local deployer, this should be the local path to the published repo. If using a a Deployer in a separate node
-# (because of clustering), this should be an load balanced SSH/HTTP URL to the published repo
-# studio.serverless.delivery.deployer.target.repoUrl: ${env:CRAFTER_DATA_DIR}/repos/sites/{siteName}/published
+# The URL the deployer will use to clone/pull the site's published repo. When the deployer is in a separate node
+# (because of clustering), this URL should be an SSH/HTTP URL to the load balancer in front of the Studios
+# studio.serverless.delivery.deployer.target.remoteRepoUrl: ${env:CRAFTER_DATA_DIR}/repos/sites/{siteName}/published
+# The deployer's local path where it will store the clone of the published site. This property is not needed if
+# the deployer is not the preview deployer, so you can leave an empty string ('') instead
+# studio.serverless.delivery.deployer.target.localRepoPath: ${env:CRAFTER_DATA_DIR}/repos/aws/{siteName}
 # Parameters for the target template. Please check the deployer template documentation for the possible parameters.
 # The following parameters will be sent automatically, and you don't need to specify them: env, site_name, replace,
 # disable_deploy_cron, local_repo_path, repo_url, use_crafter_search
@@ -408,3 +410,38 @@ studio.search.threads: -1
 #       cloudfrontCertificateArn:
 #       # The alternate domains names (besides *.cloudfront.net) for the CloudFront CDN (optional when target template is aws-cloudformed-s3)
 #       alternateCloudFrontDomainNames:
+
+##################################################
+##             Forwarded Headers                ##
+##################################################
+# Indicates if Forwarded or X-Forwarded headers should be used when resolving the client-originated protocol and
+# address. Enable when Studio is behind a reverse proxy or load balancer that sends these
+studio.forwarded.headers.enabled: false
+
+##################################################
+##               Access Tokens                  ##
+##################################################
+
+# Issuer for the generated access tokens
+studio.security.token.issuer: ${env:STUDIO_TOKEN_ISSUER}
+# List of accepted issuers for validation of access tokens (separated by commas)
+studio.security.token.validIssuers: ${env:STUDIO_TOKEN_VALID_ISSUERS}
+# The audience for generation and validation of access tokens (if empty the instance id will be used)
+studio.security.token.audience: ${env:STUDIO_TOKEN_AUDIENCE}
+# Time in minutes for the expiration of the access tokens
+studio.security.token.timeout: ${env:STUDIO_TOKEN_TIMEOUT}
+# Password for signing the access tokens (needs to be equal or greater than 512 bits in length)
+studio.security.token.password.sign: ${env:STUDIO_TOKEN_SIGN_PASSWORD}
+# Password for encrypting the access tokens
+studio.security.token.password.encrypt: ${env:STUDIO_TOKEN_ENCRYPT_PASSWORD}
+# Name of the cookie to store the refresh token
+studio.security.token.cookie.name: ${env:STUDIO_REFRESH_TOKEN_NAME}
+# The domain used to set the refresh token cookie (if set to empty the domain will be detected from the request)
+studio.security.token.cookie.domain: ${env:STUDIO_REFRESH_TOKEN_DOMAIN}
+# Time in seconds for the expiration of the refresh token cookie
+studio.security.token.cookie.maxAge: ${env:STUDIO_REFRESH_TOKEN_MAX_AGE}
+# Indicates if the refresh token cookie should be secure (should be true for production environments behind HTTPS)
+studio.security.token.cookie.secure: ${env:STUDIO_REFRESH_TOKEN_SECURE}
+
+# Use base domain instead of subdomain for the crafterSite cookie
+studio.cookie.useBaseDomain: false
