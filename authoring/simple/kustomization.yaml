@@ -2,15 +2,23 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - authoring-deployment.yaml
-configMapGenerator:
-  - name: authoring-studio-config
-    files:
-      - resources/config/studio/studio-config-override.yaml
 secretGenerator:
-  - name: authoring-ssh-keys
+  # Uncomment if using the Git SSH server instead of the Git HTTPS server
+  # - name: ssh-keys
+  #   files:
+  #     # Please remember to generate missing files
+  #     - resources/secrets/.ssh/authorized_keys
+  #     - resources/secrets/.ssh/config
+  #     - resources/secrets/.ssh/id_rsa
+  #     - resources/secrets/.ssh/id_rsa.pub
+  - name: git-https-server-cert-files
     files:
       # Please remember to generate missing files
-      - resources/secrets/.ssh/authorized_keys
-      - resources/secrets/.ssh/config
-      - resources/secrets/.ssh/id_rsa
-      - resources/secrets/.ssh/id_rsa.pub
+      - resources/secrets/git-https-server/server.crt
+      - resources/secrets/git-https-server/server.key
+  - name: git-https-server-credentials
+    literals:
+      # NEVER USE THESE IN PROD! These are only provided for demo/testing. Generate the secrets manually with kubectl 
+      # or use something like https://github.com/external-secrets/kubernetes-external-secrets
+      - username=crafter
+      - password=crafter   

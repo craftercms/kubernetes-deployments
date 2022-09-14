@@ -1,30 +1,3 @@
-# ----------------------------------------------------------------------------------------------------
-# Uncomment this section if you're deploying to an AWS EKS cluster and you want to use a LB
-# ----------------------------------------------------------------------------------------------------
-# # ALB Ingress
-# apiVersion: extensions/v1beta1
-# kind: Ingress
-# metadata:
-#   name: authoring-ingress
-#   annotations:
-#     kubernetes.io/ingress.class: alb
-#     alb.ingress.kubernetes.io/target-type: ip
-#     alb.ingress.kubernetes.io/scheme: internet-facing
-#     alb.ingress.kubernetes.io/healthcheck-port: '8080'
-#     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
-#     alb.ingress.kubernetes.io/healthcheck-path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
-#     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
-#     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=1800
-#     alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=900
-# spec:
-#   rules:
-#     - http:
-#         paths:
-#           - path: /*
-#             backend:
-#               serviceName: authoring-service-headless
-#               servicePort: 8080
-# ---
 # Authoring Headless service, needed for stable DNS entries of StatefulSet members.
 apiVersion: v1
 kind: Service
@@ -39,7 +12,7 @@ spec:
       port: 8080
       targetPort: 8080
 ---
-# Authoring non-headless service (mainly for SSH Git access from Delivery)
+# Authoring non-headless service (mainly for SSH/HTTPS Git access from Delivery)
 apiVersion: v1
 kind: Service
 metadata:
@@ -48,9 +21,13 @@ spec:
   selector:
     component: authoring
   ports:
-    - name: ssh
-      port: 22
-      targetPort: 22
+    # Uncomment if using the Git SSH server instead of the Git HTTPS server
+    # - name: git-ssh
+    #   port: 22
+    #   targetPort: 22
+    - name: git-https
+      port: 443
+      targetPort: 443
 ---
 # Authoring Deployment
 apiVersion: apps/v1
@@ -77,12 +54,13 @@ spec:
         component: authoring
     spec:
       volumes:
-        - name: ssh-keys
+        # Uncomment if using the Git SSH server instead of the Git HTTPS server
+        # - name: ssh-keys
+        #   secret:
+        #     secretName: ssh-keys
+        - name: git-https-server-cert-files
           secret:
-            secretName: authoring-ssh-keys
-        - name: studio-config
-          configMap:
-            name: authoring-studio-config
+            secretName: git-https-server-cert-files
         - name: temp
           emptyDir: {}
         - name: logs
@@ -144,10 +122,6 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
-            - name: studio-config
-              subPath: studio-config-override.yaml
-              mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/studio/extension/studio-config-override.yaml
-              readOnly: true
             - name: data
               mountPath: /opt/crafter/data
             - name: temp
@@ -189,9 +163,10 @@ spec:
           ports:
             - containerPort: 9191
           volumeMounts:
-            - name: ssh-keys
-              mountPath: /opt/crafter/.ssh
-              readOnly: true
+            # Uncomment if using the Git SSH server instead of the Git HTTPS server
+            # - name: ssh-keys
+            #   mountPath: /opt/crafter/.ssh
+            #   readOnly: true
             - name: data
               mountPath: /opt/crafter/data
             - name: temp
@@ -209,14 +184,42 @@ spec:
               cpu: 1
               memory: 2.5Gi
         # Git SSH server container
-        - name: git-ssh-server
-          image: craftercms/git_ssh_server:4.0.1
+        # - name: git-ssh-server
+        #   image: craftercms/git_ssh_server:4.0.1
+        #   imagePullPolicy: "Always"
+        #   ports:
+        #     - containerPort: 22
+        #   volumeMounts:
+        #     - name: ssh-keys
+        #       mountPath: /opt/crafter/.ssh
+        #       readOnly: true
+        #     - name: data
+        #       mountPath: /opt/crafter/data
+        # Git HTTPS server container
+        - name: git-https-server
+          image: craftercms/git_https_server:4.0.1
           imagePullPolicy: "Always"
           ports:
-            - containerPort: 22
+            - containerPort: 443
           volumeMounts:
-            - name: ssh-keys
-              mountPath: /opt/crafter/.ssh
+            - name: git-https-server-cert-files
+              subPath: server.crt
+              mountPath: /usr/local/apache2/conf/server.crt
+              readOnly: true
+            - name: git-https-server-cert-files
+              subPath: server.key
+              mountPath: /usr/local/apache2/conf/server.key
               readOnly: true
             - name: data
               mountPath: /opt/crafter/data
+          env:
+            - name: GIT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: git-https-server-credentials
+                  key: username
+            - name: GIT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: git-https-server-credentials
+                  key: password
