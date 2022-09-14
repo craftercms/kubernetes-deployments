@@ -1,3 +1,4 @@
+# Delivery Headless service, needed for stable DNS entries of StatefulSet members.
 apiVersion: v1
 kind: Service
 metadata:
@@ -18,7 +19,7 @@ metadata:
   name: delivery
 spec:
   serviceName: delivery-service-headless
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       component: delivery
@@ -36,9 +37,13 @@ spec:
         component: delivery
     spec:
       volumes:
-        - name: ssh-keys
-          secret:
-            secretName: delivery-ssh-keys
+        # Uncomment if using the Git SSH server instead of the Git HTTPS server in Authoring
+        # - name: ssh-keys
+        #   secret:
+        #     secretName: ssh-keys
+        - name: deployer-config
+          configMap:
+            name: deployer-config
         - name: temp
           emptyDir: {}
         - name: logs
@@ -99,9 +104,6 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
-            - name: ssh-keys
-              mountPath: /opt/crafter/.ssh
-              readOnly: true
             - name: data
               mountPath: /opt/crafter/data
             - name: temp
@@ -143,8 +145,13 @@ spec:
           ports:
             - containerPort: 9191
           volumeMounts:
-            - name: ssh-keys
-              mountPath: /opt/crafter/.ssh
+            # Uncomment if using the Git SSH server instead of the Git HTTPS server in Authoring
+            # - name: ssh-keys
+            #   mountPath: /opt/crafter/.ssh
+            #   readOnly: true
+            - name: deployer-config
+              subPath: .gitconfig
+              mountPath: /home/crafter/.gitconfig
               readOnly: true
             - name: data
               mountPath: /opt/crafter/data
