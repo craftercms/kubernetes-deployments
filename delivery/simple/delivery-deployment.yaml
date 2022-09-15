@@ -81,7 +81,7 @@ spec:
               memory: 2.5Gi
         # Tomcat container
         - name: tomcat
-          image: craftercms/delivery_tomcat:4.0.1
+          image: craftercms/delivery_tomcat:4.0.2-SNAPSHOT
           startupProbe:
             httpGet:
               path: /api/1/monitoring/status.json?token=defaultManagementToken
@@ -122,7 +122,7 @@ spec:
               memory: 4Gi
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:4.0.1
+          image: craftercms/deployer:4.0.2-SNAPSHOT
           startupProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
