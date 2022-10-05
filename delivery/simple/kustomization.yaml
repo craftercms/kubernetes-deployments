@@ -2,11 +2,18 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - delivery-deployment.yaml
-secretGenerator:
-  - name: delivery-ssh-keys
+configMapGenerator:
+  # This is only needed if the SSL cert used by Authoring's Git HTTPS Server are self-signed. Try to use an actual,
+  # verified certificate if possible
+  - name: deployer-config
     files:
-      # Please remember to generate missing files
-      - resources/secrets/.ssh/authorized_keys
-      - resources/secrets/.ssh/config
-      - resources/secrets/.ssh/id_rsa
-      - resources/secrets/.ssh/id_rsa.pub
+      - resources/config/deployer/.gitconfig
+secretGenerator:
+  # Uncomment if using the Git SSH server instead of the Git HTTPS server in Authoring
+  # - name: ssh-keys
+  #   files:
+  #     # Please remember to generate missing files
+  #     - resources/secrets/.ssh/authorized_keys
+  #     - resources/secrets/.ssh/config
+  #     - resources/secrets/.ssh/id_rsa
+  #     - resources/secrets/.ssh/id_rsa.pub

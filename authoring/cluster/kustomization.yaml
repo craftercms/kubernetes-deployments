@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - authoring-deployment.yaml
+configMapGenerator:
+  - name: studio-config
+    files:
+      - resources/config/studio/studio-config-override.yaml
+      - resources/config/studio/hazelcast-config.yaml
+      # This is only needed if the SSL cert used by the Git HTTPS Server are self-signed. Try to use an actual,
+      # verified certificate if possible
+      - resources/config/studio/.gitconfig
+secretGenerator:
+  - name: crafter-license
+    files:
+      - resources/secrets/crafter.lic
+  - name: git-https-server-cert-files
+    files:
+      # Please remember to generate missing files
+      - resources/secrets/git-https-server/server.crt
+      - resources/secrets/git-https-server/server.key
+  - name: git-https-server-credentials
+    literals:
+      # NEVER USE THESE IN PROD! These are only provided for demo/testing. Generate the secrets manually with kubectl 
+      # or use something like https://external-secrets.io/v0.6.0-rc1/
+      - username=crafter
+      - password=crafter
