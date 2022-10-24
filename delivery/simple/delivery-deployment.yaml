@@ -1,8 +1,34 @@
+# ALB Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: delivery-ingress
+  annotations:
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/healthcheck-port: '8080'
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-path: /api/1/monitoring/status.json?token=defaultManagementToken
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+    alb.ingress.kubernetes.io/success-codes: '200'
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=600
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: delivery-svc-headless
+                port:
+                  number: 8080
 # Delivery Headless service, needed for stable DNS entries of StatefulSet members.
 apiVersion: v1
 kind: Service
 metadata:
-  name: delivery-service-headless
+  name: delivery-svc-headless
 spec:
   clusterIP: None
   selector:
@@ -18,7 +44,7 @@ kind: StatefulSet
 metadata:
   name: delivery
 spec:
-  serviceName: delivery-service-headless
+  serviceName: delivery-svc-headless
   replicas: 1
   selector:
     matchLabels:
@@ -37,13 +63,14 @@ spec:
         component: delivery
     spec:
       volumes:
-        # Uncomment if using the Git SSH server instead of the Git HTTPS server in Authoring
+        # # Uncomment if using Authoring Simple with Git SSH Server
         # - name: ssh-keys
         #   secret:
         #     secretName: ssh-keys
-        - name: deployer-config
-          configMap:
-            name: deployer-config
+        # # Uncomment if using Authoring Simple with Git HTTPS Server
+        # - name: git-https-server-cert-files
+        #   secret:
+        #     secretName: git-https-server-cert-files
         - name: temp
           emptyDir: {}
         - name: logs
@@ -145,14 +172,15 @@ spec:
           ports:
             - containerPort: 9191
           volumeMounts:
-            # Uncomment if using the Git SSH server instead of the Git HTTPS server in Authoring
+            # # Uncomment if using Authoring Simple with Git SSH Server
             # - name: ssh-keys
             #   mountPath: /opt/crafter/.ssh
             #   readOnly: true
-            - name: deployer-config
-              subPath: .gitconfig
-              mountPath: /home/crafter/.gitconfig
-              readOnly: true
+            # # Uncomment if using Authoring Simple with Git HTTPS Server
+            # - name: git-https-server-cert-files
+            #   subPath: server.crt
+            #   mountPath: /opt/crafter/trusted-certs/git-https-server.crt
+            #   readOnly: true
             - name: data
               mountPath: /opt/crafter/data
             - name: temp
