@@ -21,7 +21,7 @@ spec:
             pathType: ImplementationSpecific
             backend:
               service:
-                name: authoring-service-headless
+                name: authoring-svc-headless
                 port:
                   number: 8080
 ---
@@ -37,8 +37,12 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
     alb.ingress.kubernetes.io/success-codes: '200'
     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=600
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    # alb.ingress.kubernetes.io/ssl-redirect: '443'
+    # alb.ingress.kubernetes.io/certificate-arn: ''    
 spec:
   ingressClassName: alb
   rules:
@@ -48,14 +52,14 @@ spec:
             pathType: Exact
             backend:
               service:
-                name: authoring-service-headless
+                name: authoring-svc-headless
                 port:
                   number: 8080
           - path: /*
             pathType: ImplementationSpecific
             backend:
               service:
-                name: authoring-service-headless
+                name: authoring-svc-headless
                 port:
                   number: 443
 ---
@@ -63,7 +67,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: authoring-service-headless
+  name: authoring-svc-headless
   labels:
     hazelcastClusterName: studio_hazelcast_cluster
 spec:
@@ -94,7 +98,7 @@ kind: StatefulSet
 metadata:
   name: authoring
 spec:
-  serviceName: authoring-service-headless
+  serviceName: authoring-svc-headless
   replicas: 2
   updateStrategy:
     type: OnDelete
@@ -204,6 +208,10 @@ spec:
               protocol: TCP
               containerPort: 5701              
           volumeMounts:
+            - name: git-https-server-cert-files
+              subPath: server.crt
+              mountPath: /opt/crafter/trusted-certs/git-https-server.crt
+              readOnly: true
             - name: mnt
               subPath: crafter-setenv.sh
               mountPath: /opt/crafter/bin/crafter-setenv.sh
@@ -226,10 +234,6 @@ spec:
               subPath: hazelcast-config.yaml
               mountPath: /opt/crafter/bin/apache-tomcat/shared/classes/crafter/studio/extension/hazelcast-config.yaml
               readOnly: true
-            - name: studio-config
-              subPath: .gitconfig
-              mountPath: /home/crafter/.gitconfig
-              readOnly: true
           env:
             - name: CATALINA_OPTS
               # The extra params (starting with -add-modules) are recommended by Hazelcast for performance
@@ -241,12 +245,11 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: CLUSTER_NODE_ADDRESS
-              value: "$(POD_NAME).authoring-service-headless.default.svc.cluster.local"
+              value: "$(POD_NAME).authoring-svc-headless.craftercms"
             - name: MARIADB_CLUSTER_NODE_ADDRESS
               value: "$(CLUSTER_NODE_ADDRESS)"
             - name: MARIADB_CLUSTER_NODE_COUNT
-              # This should match the replica count. Also update the config/studio/.gitconfig to specify sslVerify false
-              # for the HTTPS URL of every replica/cluster node (if using a self-signed cert in Git HTTPS server)
+              # This should match the replica count
               value: "2"
             - name: CLUSTER_USERNAME
               valueFrom:

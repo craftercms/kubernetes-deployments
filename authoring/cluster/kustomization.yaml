@@ -1,15 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: craftercms
 resources:
+  - namespace.yaml
+  - hazelcast-rbac.yaml
   - authoring-deployment.yaml
 configMapGenerator:
   - name: studio-config
     files:
       - resources/config/studio/studio-config-override.yaml
       - resources/config/studio/hazelcast-config.yaml
-      # This is only needed if the SSL cert used by the Git HTTPS Server are self-signed. Try to use an actual,
-      # verified certificate if possible
-      - resources/config/studio/.gitconfig
 secretGenerator:
   - name: crafter-license
     files:
