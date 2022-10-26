@@ -5,7 +5,7 @@ hazelcast:
         enabled: false
       kubernetes:
         enabled: true
-        namespace: default
+        namespace: craftercms
         service-label-name: hazelcastClusterName
         service-label-value: studio_hazelcast_cluster
         resolve-not-ready-addresses: true
