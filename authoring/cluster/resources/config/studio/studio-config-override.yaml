@@ -10,6 +10,8 @@ studio.repo.basePath: ${env:CRAFTER_DATA_DIR}/repos
 # studio.repo.published.live: live
 # Git repository branch for the `staging` publishing target, default "staging"
 # studio.repo.published.staging: staging
+# If Git CLI should be used for some Git operations, for better performance (Git CLI needs to be installed beforehand)
+# studio.repo.git.cli.enabled: true
 
 ############################################################
 ##                   Site Configuration                   ##
@@ -39,6 +41,7 @@ studio.configuration.management.previewProtectedUrls: >-
   /api/1/site/context/graphql/rebuild,
   /api/1/site/cache/clear,
   /api/1/site/cache/statistics
+
 ############################################################
 ##                    Preview Deployer                    ##
 ############################################################
@@ -85,8 +88,10 @@ studio.db.socket: /tmp/MariaDB4j.${env:MARIADB_PORT}.sock
 # studio.db.initializer.randomAdminPassword.length: 16
 # Random admin password allowed chars
 # studio.db.initializer.randomAdminPassword.chars: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*_=+-/
-# HTTP Session timeout for studio (value is in minutes).
-# studio.security.sessionTimeout: 60
+# Time in minutes after which active users will be required to login again
+# studio.security.sessionTimeout: 480
+# Time in minutes after which inactive users will be required to login again
+# studio.security.inactivityTimeout: 30
 # Defines security provider for accessing repository. Possible values
 # - db (users are stored in database)
 # - ldap (users are imported from LDAP into the database)
@@ -94,9 +99,9 @@ studio.db.socket: /tmp/MariaDB4j.${env:MARIADB_PORT}.sock
 # studio.security.type: ldap
 #
 # Salt for encrypting
-studio.security.cipher.salt: ${env:CRAFTER_SYSTEM_ENCRYPTION_KEY}
+studio.security.cipher.salt: ${env:CRAFTER_SYSTEM_ENCRYPTION_SALT}
 # Key for encrypting
-studio.security.cipher.key: ${env:CRAFTER_SYSTEM_ENCRYPTION_SALT}
+studio.security.cipher.key: ${env:CRAFTER_SYSTEM_ENCRYPTION_KEY}
 # Password requirements validation regular expression
 # The supported capture group keys are:
 #   hasNumbers
@@ -219,6 +224,9 @@ studio.security.encryption.salt: ${env:CRAFTER_ENCRYPTION_SALT}
 # SAML Web SSO profile options: force user to re-authenticate
 # studio.security.saml.webSSOProfileOptions.forceAuthn: false
 
+# The path of the folder used for the SSH configuration
+studio.security.ssh.config: ${env:CRAFTER_SSH_CONFIG}
+
 # Defines name used for environment specific configuration. It is used for environment overrides in studio. Default value is default.
 studio.configuration.environment.active: ${env:CRAFTER_ENVIRONMENT}
 
@@ -248,23 +256,16 @@ studio.mail.port: ${env:MAIL_PORT}
 ##                 Clustering                   ##
 ##################################################
 # -------------------------------------------------------------------------------------
-# IMPORTANT: To enable clustering, please specify the following Spring profiles
+# IMPORTANT: To enable clustering, please specify the following Spring profile
 # in your crafter-setenv.sh:
-#  - SPRING_PROFILES_ACTIVE=crafter.studio.dbCluster  
-#    You will need to uncomment the Hazelcast and Studio DB Cluster property sections too 
+#  - SPRING_PROFILES_ACTIVE=crafter.studio.dbClusterPrimaryReplica 
+#    You will need to uncomment the Hazelcast and Studio DB Cluster property sections too
 # -------------------------------------------------------------------------------------
 
 # Cluster Git URL format for synching members. 
 # - Typical SSH URL format: ssh://{username}@{localAddress}{absolutePath}
 # - Typical HTTPS URL format: https://{localAddress}/repos/sites
-# studio.clustering.sync.urlFormat: ssh://{username}@{localAddress}{absolutePath}
 studio.clustering.sync.urlFormat: https://{localAddress}/repos/sites
-
-# Cluster Syncers
-# Cluster member after heartbeat stale for amount of minutes will be declared inactive
-# studio.clustering.heartbeatStale.timeLimit: 5
-# Cluster member after being inactive for amount of minutes will be removed from cluster
-# studio.clustering.inactivity.timeLimit: 5
 
 # Cluster member registration, this registers *this* server into the pool
 # Cluster node registration data, remember to uncomment the next line
@@ -297,10 +298,6 @@ studio.hazelcast.config.location: classpath:crafter/studio/extension/hazelcast-c
 ##################################################
 ##                Studio DB Cluster             ##
 ##################################################
-# DB cluster library location
-studio.db.cluster.lib.location: ${env:CRAFTER_BIN_DIR}/dbms/libs/galera/libgalera_smm.so
-# The path where the grastate.dat file resides
-studio.db.cluster.grastate.location: ${studio.db.dataPath}/grastate.dat
 # DB cluster name
 studio.db.cluster.name: ${env:MARIADB_CLUSTER_NAME}
 # Count for the number of Studio cluster members (without counting the arbiter)
@@ -317,9 +314,7 @@ studio.db.cluster.nodes.status.report.ttl: 60
 studio.db.cluster.nodes.startup.wait.timeout: 300
 # Time in seconds before giving up on waiting for cluster bootstrap to complete (at least a node is active,
 # which means the node is synced AND its Studio has finished starting up)
-studio.db.cluster.bootrap.wait.timeout: 180
-# Time in seconds before giving up on the local node to finish synching with the cluster
-studio.db.cluster.nodes.local.synced.wait.timeout: 180
+studio.db.cluster.bootstrap.wait.timeout: 180
 
 ################################################################
 ##                             CORS                           ##
@@ -409,4 +404,32 @@ studio.search.keepAlive: false
 ##################################################
 # Indicates if Forwarded or X-Forwarded headers should be used when resolving the client-originated protocol and
 # address. Enable when Studio is behind a reverse proxy or load balancer that sends these
-studio.forwarded.headers.enabled: false
+studio.forwarded.headers.enabled: true
+
+##################################################
+##               Access Tokens                  ##
+##################################################
+
+# Issuer for the generated access tokens
+studio.security.token.issuer: ${env:STUDIO_TOKEN_ISSUER}
+# List of accepted issuers for validation of access tokens (separated by commas)
+studio.security.token.validIssuers: ${env:STUDIO_TOKEN_VALID_ISSUERS}
+# The audience for generation and validation of access tokens (if empty the instance id will be used)
+studio.security.token.audience: ${env:STUDIO_TOKEN_AUDIENCE}
+# Time in minutes for the expiration of the access tokens
+studio.security.token.timeout: ${env:STUDIO_TOKEN_TIMEOUT}
+# Password for signing the access tokens (needs to be equal or greater than 512 bits in length)
+studio.security.token.password.sign: ${env:STUDIO_TOKEN_SIGN_PASSWORD}
+# Password for encrypting the access tokens
+studio.security.token.password.encrypt: ${env:STUDIO_TOKEN_ENCRYPT_PASSWORD}
+# Name of the cookie to store the refresh token
+studio.security.token.cookie.name: ${env:STUDIO_REFRESH_TOKEN_NAME}
+# The domain used to set the refresh token cookie (if set to empty the domain will be detected from the request)
+studio.security.token.cookie.domain: ${env:STUDIO_REFRESH_TOKEN_DOMAIN}
+# Time in seconds for the expiration of the refresh token cookie
+studio.security.token.cookie.maxAge: ${env:STUDIO_REFRESH_TOKEN_MAX_AGE}
+# Indicates if the refresh token cookie should be secure (should be true for production environments behind HTTPS)
+studio.security.token.cookie.secure: ${env:STUDIO_REFRESH_TOKEN_SECURE}
+
+# Use base domain instead of subdomain for the crafterSite cookie
+studio.cookie.useBaseDomain: false

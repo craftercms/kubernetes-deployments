@@ -1,19 +1,16 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: craftercms
 resources:
   - delivery-deployment.yaml
-configMapGenerator:
-  # This is only needed if the SSL cert used by Authoring's Git HTTPS Server are self-signed. Try to use an actual,
-  # verified certificate if possible
-  - name: deployer-config
-    files:
-      - resources/config/deployer/.gitconfig
 secretGenerator:
-  # Uncomment if using the Git SSH server instead of the Git HTTPS server in Authoring
+  # # Uncomment if using the Git SSH server in Authoring
   # - name: ssh-keys
   #   files:
   #     # Please remember to generate missing files
-  #     - resources/secrets/.ssh/authorized_keys
-  #     - resources/secrets/.ssh/config
-  #     - resources/secrets/.ssh/id_rsa
-  #     - resources/secrets/.ssh/id_rsa.pub
+  #     - resources/secrets/git-ssh-server/id_rsa
+  #     - resources/secrets/git-ssh-server/id_rsa.pub
+  # Uncomment if using the Git HTTPS server in Authoring
+  - name: git-https-server-cert-files
+    files:
+      - resources/secrets/git-https-server/server.crt
