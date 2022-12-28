@@ -17,4 +17,4 @@ For the Authoring cluster example, you will need and AWS EKS cluster with the AW
 
 - [Authoring cluster (enterprise only)](authoring/cluster)
 - [Simple Authoring with a single instance](authoring/simple)
-- [Simple Delivery with a single instance pulling from an Authoring cluster or a single Authoring](delivery/simple)
+- [Simple Delivery with 2 instances pulling from an Authoring cluster or a single Authoring](delivery/simple)
