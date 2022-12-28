@@ -2,19 +2,15 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: craftercms
 resources:
-  - namespace.yaml
   - delivery-deployment.yaml
-# # Uncomment if using Authoring Simple
-# secretGenerator:
-#   # Uncomment if using Authoring Simple with the Git HTTPS Server
-#   - name: git-https-server-cert-files
-#     files:
-#       - resources/secrets/git-https-server/server.crt
-#   # Uncomment if using Authoring Simple with tthe Git SSH Server
-#   - name: ssh-keys
-#     files:
-#       # Please remember to generate missing files
-#       - resources/secrets/.ssh/authorized_keys
-#       - resources/secrets/.ssh/config
-#       - resources/secrets/.ssh/id_rsa
-#       - resources/secrets/.ssh/id_rsa.pub
+secretGenerator:
+  # # Uncomment if using the Git SSH server in Authoring
+  # - name: ssh-keys
+  #   files:
+  #     # Please remember to generate missing files
+  #     - resources/secrets/git-ssh-server/id_rsa
+  #     - resources/secrets/git-ssh-server/id_rsa.pub
+  # Uncomment if using the Git HTTPS server in Authoring
+  - name: git-https-server-cert-files
+    files:
+      - resources/secrets/git-https-server/server.crt

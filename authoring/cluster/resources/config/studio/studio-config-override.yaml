@@ -258,7 +258,7 @@ studio.mail.port: ${env:MAIL_PORT}
 # -------------------------------------------------------------------------------------
 # IMPORTANT: To enable clustering, please specify the following Spring profile
 # in your crafter-setenv.sh:
-#  - SPRING_PROFILES_ACTIVE=crafter.studio.dbCluster 
+#  - SPRING_PROFILES_ACTIVE=crafter.studio.dbClusterPrimaryReplica 
 #    You will need to uncomment the Hazelcast and Studio DB Cluster property sections too
 # -------------------------------------------------------------------------------------
 
@@ -266,12 +266,6 @@ studio.mail.port: ${env:MAIL_PORT}
 # - Typical SSH URL format: ssh://{username}@{localAddress}{absolutePath}
 # - Typical HTTPS URL format: https://{localAddress}/repos/sites
 studio.clustering.sync.urlFormat: https://{localAddress}/repos/sites
-
-# Cluster Syncers
-# Cluster member after heartbeat stale for amount of minutes will be declared inactive
-studio.clustering.heartbeatStale.timeLimit: 5
-# Cluster member after being inactive for amount of minutes will be removed from cluster
-studio.clustering.inactivity.timeLimit: 5
 
 # Cluster member registration, this registers *this* server into the pool
 # Cluster node registration data, remember to uncomment the next line
@@ -304,13 +298,9 @@ studio.hazelcast.config.location: classpath:crafter/studio/extension/hazelcast-c
 ##################################################
 ##                Studio DB Cluster             ##
 ##################################################
-# DB cluster library location
-# studio.db.cluster.lib.location: ${env:CRAFTER_BIN_DIR}/dbms/libs/galera/libgalera_smm.so
-# The path where the grastate.dat file resides
-# studio.db.cluster.grastate.location: ${studio.db.dataPath}/grastate.dat
 # DB cluster name
 studio.db.cluster.name: ${env:MARIADB_CLUSTER_NAME}
-# Count for the number of Studio cluster members
+# Count for the number of Studio cluster members (without counting the arbiter)
 studio.db.cluster.nodes.count: ${env:MARIADB_CLUSTER_NODE_COUNT}
 # DB cluster address of the local node (which will be seen by other members of the cluster)
 studio.db.cluster.nodes.local.address: ${env:MARIADB_CLUSTER_NODE_ADDRESS}
@@ -322,11 +312,9 @@ studio.db.cluster.nodes.status.report.period: 30
 studio.db.cluster.nodes.status.report.ttl: 60
 # Time in seconds before giving up on waiting for all cluster members to appear online on startup
 studio.db.cluster.nodes.startup.wait.timeout: 300
-#Time in seconds before giving up on waiting for cluster bootstrap to complete (at least a node is active,
+# Time in seconds before giving up on waiting for cluster bootstrap to complete (at least a node is active,
 # which means the node is synced AND its Studio has finished starting up)
-studio.db.cluster.bootrap.wait.timeout: 180
-# Time in seconds before giving up on the local node to finish synching with the cluster
-studio.db.cluster.nodes.local.synced.wait.timeout: 180
+studio.db.cluster.bootstrap.wait.timeout: 180
 
 ################################################################
 ##                             CORS                           ##
