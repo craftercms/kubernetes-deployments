@@ -36,23 +36,17 @@ spec:
     component: authoring
   ports:
     - name: http
+      protocol: TCP
       port: 8080
       targetPort: 8080
----
-# Authoring non-headless service (mainly for SSH/HTTPS Git access from Delivery)
-apiVersion: v1
-kind: Service
-metadata:
-  name: authoring-svc
-spec:
-  selector:
-    component: authoring
-  ports:
-    # Uncomment if using the Git SSH server instead of the Git HTTPS server
+    # # Uncomment if using Git SSH
     # - name: git-ssh
+    #   protocol: TCP
     #   port: 22
     #   targetPort: 22
+    # Uncomment if using Git HTTPS
     - name: git-https
+      protocol: TCP
       port: 443
       targetPort: 443
 ---
@@ -81,10 +75,11 @@ spec:
         component: authoring
     spec:
       volumes:
-        # Uncomment if using the Git SSH server instead of the Git HTTPS server
+        # # Uncomment if using Git SSH
         # - name: ssh-keys
         #   secret:
         #     secretName: ssh-keys
+        # Uncomment if using Git HTTPS
         - name: git-https-server-cert-files
           secret:
             secretName: git-https-server-cert-files
@@ -115,7 +110,7 @@ spec:
             - name: discovery.type
               value: single-node
             - name: ES_JAVA_OPTS
-              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=70.0"
           resources:
             requests:
               cpu: 500m
@@ -125,7 +120,7 @@ spec:
               memory: 2.5Gi
         # Tomcat container
         - name: tomcat
-          image: craftercms/authoring_tomcat:4.0.2-SNAPSHOT
+          image: craftercms/authoring_tomcat:4.0.2
           imagePullPolicy: "Always"
           startupProbe:
             httpGet:
@@ -157,7 +152,7 @@ spec:
               mountPath: /opt/crafter/logs
           env:
             - name: CATALINA_OPTS
-              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=70.0"
           resources:
             requests:
               cpu: 1
@@ -167,7 +162,7 @@ spec:
               memory: 5Gi
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:4.0.2-SNAPSHOT
+          image: craftercms/deployer:4.0.2
           startupProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
@@ -190,7 +185,7 @@ spec:
           ports:
             - containerPort: 9191
           volumeMounts:
-            # Uncomment if using the Git SSH server instead of the Git HTTPS server
+            # # Uncomment if using Git SSH
             # - name: ssh-keys
             #   mountPath: /opt/crafter/.ssh
             #   readOnly: true
@@ -202,7 +197,7 @@ spec:
               mountPath: /opt/crafter/logs
           env:
             - name: DEPLOYER_JAVA_OPTS
-              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=70.0"
           resources:
             requests:
               cpu: 500m
@@ -210,9 +205,10 @@ spec:
             limits:
               cpu: 1
               memory: 2.5Gi
-        # Git SSH server container
+        # # Git SSH server container
+        # # Uncomment if using Git SSH
         # - name: git-ssh-server
-        #   image: craftercms/git_ssh_server:4.0.2-SNAPSHOT
+        #   image: craftercms/git_ssh_server:4.0.2
         #   imagePullPolicy: "Always"
         #   ports:
         #     - containerPort: 22
@@ -223,8 +219,9 @@ spec:
         #     - name: data
         #       mountPath: /opt/crafter/data
         # Git HTTPS server container
+        # Uncomment if using Git HTTPS
         - name: git-https-server
-          image: craftercms/git_https_server:4.0.2-SNAPSHOT
+          image: craftercms/git_https_server:4.0.2
           imagePullPolicy: "Always"
           ports:
             - containerPort: 443

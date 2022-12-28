@@ -64,18 +64,35 @@ spec:
         component: delivery
     spec:
       volumes:
-        # # Uncomment if using Authoring Simple with Git SSH Server
+        # # Uncomment if using the Git SSH server in Authoring
         # - name: ssh-keys
         #   secret:
         #     secretName: ssh-keys
-        # # Uncomment if using Authoring Simple with Git HTTPS Server
-        # - name: git-https-server-cert-files
-        #   secret:
-        #     secretName: git-https-server-cert-files
+        # Uncomment if using the Git HTTPS server in Authoring
+        - name: git-https-server-cert-files
+          secret:
+            secretName: git-https-server-cert-files
         - name: temp
           emptyDir: {}
         - name: logs
           emptyDir: {}
+      # # Uncomment if using the Git SSH server in Authoring
+      # initContainers:
+      #   - name: ssh-keys-copier
+      #     image: craftercms/delivery_tomcat:4.0.2
+      #     volumeMounts:
+      #       - name: ssh-keys
+      #         mountPath: /.ssh
+      #         readOnly: true
+      #       - name: data
+      #         mountPath: /opt/crafter/data
+      #     command: ["bash", "-c"]
+      #     args: 
+      #       - mkdir -p /opt/crafter/data/ssh;
+      #         rm -f /opt/crafter/data/ssh/known_hosts;
+      #         cp -p /.ssh/* /opt/crafter/data/ssh;
+      #         ssh-keyscan 'authoring-svc-headless' >> /opt/crafter/data/ssh/known_hosts; 
+      #         chown -R crafter:crafter /opt/crafter/data/ssh
       containers:
         # Elasticsearch container
         - name: elasticsearch
@@ -99,7 +116,7 @@ spec:
             - name: discovery.type
               value: single-node
             - name: ES_JAVA_OPTS
-              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=70.0"
           resources:
             requests:
               cpu: 500m
@@ -109,7 +126,7 @@ spec:
               memory: 2.5Gi
         # Tomcat container
         - name: tomcat
-          image: craftercms/delivery_tomcat:4.0.2-SNAPSHOT
+          image: craftercms/delivery_tomcat:4.0.2
           startupProbe:
             httpGet:
               path: /api/1/monitoring/status.json?token=defaultManagementToken
@@ -140,7 +157,7 @@ spec:
               mountPath: /opt/crafter/logs
           env:
             - name: CATALINA_OPTS
-              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=70.0"
           resources:
             requests:
               cpu: 1
@@ -150,7 +167,7 @@ spec:
               memory: 4Gi
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:4.0.2-SNAPSHOT
+          image: craftercms/deployer:4.0.2
           startupProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
@@ -173,15 +190,11 @@ spec:
           ports:
             - containerPort: 9191
           volumeMounts:
-            # # Uncomment if using Authoring Simple with Git SSH Server
-            # - name: ssh-keys
-            #   mountPath: /opt/crafter/.ssh
-            #   readOnly: true
-            # # Uncomment if using Authoring Simple with Git HTTPS Server
-            # - name: git-https-server-cert-files
-            #   subPath: server.crt
-            #   mountPath: /opt/crafter/trusted-certs/git-https-server.crt
-            #   readOnly: true
+            # Uncomment if using the Git HTTPS server in Authoring
+            - name: git-https-server-cert-files
+              subPath: server.crt
+              mountPath: /opt/crafter/trusted-certs/git-https-server.crt
+              readOnly: true
             - name: data
               mountPath: /opt/crafter/data
             - name: temp
@@ -190,7 +203,7 @@ spec:
               mountPath: /opt/crafter/logs
           env:
             - name: DEPLOYER_JAVA_OPTS
-              value: "-server -Xss1024K -XX:MaxRAMPercentage=80.0"
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=70.0"
           resources:
             requests:
               cpu: 500m
