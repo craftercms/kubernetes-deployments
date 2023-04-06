@@ -41,7 +41,6 @@ studio.configuration.management.previewProtectedUrls: >-
   /api/1/site/context/graphql/rebuild,
   /api/1/site/cache/clear,
   /api/1/site/cache/statistics
-
 ############################################################
 ##                    Preview Deployer                    ##
 ############################################################
@@ -102,17 +101,18 @@ studio.db.socket: /tmp/MariaDB4j.${env:MARIADB_PORT}.sock
 studio.security.cipher.salt: ${env:CRAFTER_SYSTEM_ENCRYPTION_SALT}
 # Key for encrypting
 studio.security.cipher.key: ${env:CRAFTER_SYSTEM_ENCRYPTION_KEY}
-# Password requirements validation regular expression
-# The supported capture group keys are:
-#   hasNumbers
-#   hasLowercase
-#   hasUppercase
-#   hasSpecialChars
-#   noSpaces
-#   minLength
-#   maxLength
-#   minMaxLength
-# studio.security.passwordRequirements.validationRegex: ^(?=(?<hasNumbers>.*[0-9]))(?=(?<hasLowercase>.*[a-z]))(?=(?<hasUppercase>.*[A-Z]))(?=(?<hasSpecialChars>.*[~|!`,;\/@#$%^&+=]))(?<minLength>.{8,})$
+# Password requirements minimum complexity
+# This is based on https://github.com/dropbox/zxcvbn
+# The minimum complexity corresponds to the password score
+# You can try this out here https://lowe.github.io/tryzxcvbn/
+#  score      # Integer from 0-4 (useful for implementing a strength bar)
+#  0 # too guessable: risky password. (guesses < 10^3)
+#  1 # very guessable: protection from throttled online attacks. (guesses < 10^6)
+#  2 # somewhat guessable: protection from unthrottled online attacks. (guesses < 10^8)
+#  3 # safely unguessable: moderate protection from offline slow-hash scenario. (guesses < 10^10)
+#  4 # very unguessable: strong protection from offline slow-hash scenario. (guesses >= 10^10)
+# The default value is 3
+# studio.security.passwordRequirements.minimumComplexity: 3
 # Studio authentication chain configuration
 # studio.authentication.chain:
   # Authentication provider type
@@ -189,36 +189,52 @@ studio.security.encryption.salt: ${env:CRAFTER_ENCRYPTION_SALT}
 # studio.security.saml.attributeName.lastName: surname
 # SAML attribute name for group
 # studio.security.saml.attributeName.group: Role
-# Service Provider Metadata location (classpath resource)
-# studio.security.saml.metadata.location.serviceProvider: "/crafter/studio/extension/saml/sp-metadata.xml"
-# IDP Metadata location (classpath resource)
-# studio.security.saml.metadata.location.idp: "/crafter/studio/extension/saml/idp-metadata.xml"
-# SAML keystore location
-# studio.security.saml.keystore.location: classpath:crafter/studio/extension/saml/keystore.jks
-# SAML keystore store password
-# studio.security.saml.keystore.storePassword: crafterstore
-# SAML keystore key password
-# studio.security.saml.keystore.keyPassword: crafterkey
-# SAML keystore alias
-# studio.security.saml.keystore.alias: crafterstudio
-# SAML logout URL
-# studio.security.saml.logoutUrl: /studio/saml/logout
-# Enable SAML configuration used when Studio is behind a reverse proxy or load balancer
-# studio.security.saml.reverseProxy.enabled: false
-# The header name that contains the public URL (matching the SAML SP URL) hostname
-# studio.security.saml.reverseProxy.forwardedHostHeaderName: X-Forwarded-Host
-# The header name that contains the public URL (matching the SAML SP URL) port
-# studio.security.saml.reverseProxy.forwardedPortHeaderName: X-Forwarded-Port
-# The header name that contains the public URL (matching the SAML SP URL) protocol
-# studio.security.saml.reverseProxy.forwardedProtoHeaderName: X-Forwarded-Proto
-# The scheme or protocol of the public URL (matching the SAML SP URL). Use if you wan to overwrite the forwarded header
-# studio.security.saml.reverseProxy.scheme:
-# The server name or hostname of the public URL (matching the SAML SP URL). Use if you wan to overwrite the forwarded header
-# studio.security.saml.reverseProxy.serverName:
-# The port of the public URL (matching the SAML SP URL). Use if you wan to overwrite the forwarded header
-# studio.security.saml.reverseProxy.serverPort: 0
-# The context path of the public URL (matching the SAML SP URL)
-# studio.security.saml.reverseProxy.contextPath:
+###############################################################
+##         SAML Security Relying Party (SP) configuration    ##
+###############################################################
+# {baseUrl} and {registrationId} are pre-defined macros and should not be modified
+# SAML relying party (SP) registration ID. {registrationId} macro will be replaced with this value
+# studio.security.saml.rp.registration.id: SSO
+# SAML relying party (SP) entity ID
+# studio.security.saml.rp.entity.id: "{baseUrl}/saml/metadata"
+# SAML relying party (SP) login processing url. Must end with {registrationId}
+# studio.security.saml.rp.loginProcessingUrl: "/saml/{registrationId}"
+# SAML relying party (SP) assertion consumer service location. Must end with {registrationId}
+# studio.security.saml.rp.assertion.consumer.service.location: "{baseUrl}/saml/{registrationId}"
+# SAML relying party (SP) assertion consumer service biding (POST or REDIRECT)
+# studio.security.saml.rp.assertion.consumer.service.binding: POST
+# SAML logout URL without prefix /studio
+# studio.security.saml.rp.logoutUrl: /saml/logout
+# SAML relying party (SP) single logout service location
+# studio.security.saml.rp.logout.service.location: "{baseUrl}/saml/logout"
+# SAML relying party (SP) logout service binding (POST or REDIRECT)
+# studio.security.saml.rp.logout.service.binding: POST
+# SAML relying party (SP) metadata endpoint
+# studio.security.saml.rp.metadata.endpoint: /saml/metadata
+# SAML relying party (SP) private key location
+# studio.security.saml.rp.privateKey.location: classpath:crafter/studio/extension/saml/rp-private.key
+# SAML relying party (SP) certificate location
+# studio.security.saml.rp.certificate.location: classpath:crafter/studio/extension/saml/rp-certificate.crt
+###############################################################
+##      SAML Security Asserting Party (IdP) configuration    ##
+###############################################################
+# SAML asserting party (IdP) entity ID:
+# studio.security.saml.ap.entityId: https://ap.example.org/ap-entity-id
+# SAML asserting party (IdP) single sign on service location
+# studio.security.saml.ap.single.signOn.service.location: https://ap.example.org/sso/saml
+# SAML asserting party (IdP) single sign on service binding (POST or REDIRECT)
+# studio.security.saml.ap.single.signOn.service.binding: POST
+# SAML asserting party (IdP) logout service location
+# studio.security.saml.ap.single.logout.service.location: https://ap.example.org/slo/saml
+# SAML asserting party (IdP) logout service binding (POST or REDIRECT)
+# studio.security.saml.ap.single.logout.service.binding: POST
+# SAML asserting party (IdP) want authn request signed
+# studio.security.saml.ap.want.authn.request.signed: false
+# SAML asserting party (IdP) certificate location
+# studio.security.saml.ap.certificate.location: classpath:crafter/studio/extension/saml/idp-certificate.crt
+###############################################################
+##            SAML Security other configuration              ##
+###############################################################
 # SAML Web SSO profile options: authenticate the user silently
 # studio.security.saml.webSSOProfileOptions.passive: false
 # SAML Web SSO profile options: force user to re-authenticate
@@ -258,7 +274,7 @@ studio.mail.port: ${env:MAIL_PORT}
 # -------------------------------------------------------------------------------------
 # IMPORTANT: To enable clustering, please specify the following Spring profile
 # in your crafter-setenv.sh:
-#  - SPRING_PROFILES_ACTIVE=crafter.studio.dbClusterPrimaryReplica 
+#  - SPRING_PROFILES_ACTIVE=crafter.studio.dbClusterPrimaryReplica
 #    You will need to uncomment the Hazelcast and Studio DB Cluster property sections too
 # -------------------------------------------------------------------------------------
 
