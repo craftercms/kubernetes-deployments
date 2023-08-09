@@ -5,9 +5,13 @@
 1. Install kubectl
 2. Have a Kubernetes cluster available. For testing the Simple Authoring and Simple Delivery you can used any cluster. If using `minikube`, please run the following commands, to avoid `context deadline exceeded` errors:
 
-- `minikube image pull craftercms/authoring_tomcat:4.0.4`
-- `minikube image pull craftercms/delivery_tomcat:4.0.4`
-- `minikube image pull docker.elastic.co/elasticsearch/elasticsearch:7.17.1`
+- `minikube image pull craftercms/authoring_tomcat:4.1.1`
+- `minikube image pull craftercms/authoring_tomcat:4.1.1E`
+- `minikube image pull craftercms/delivery_tomcat:4.1.1`
+- `minikube image pull craftercms/delivery_tomcat:4.1.1E`
+- `minikube image pull craftercms/deployer:4.1.1`
+- `minikube image pull craftercms/deployer:4.1.1E`
+- `minikube image pull opensearchproject/opensearch:2.8.0`
 
 For the Authoring cluster example, you will need and AWS EKS cluster with the AWS Load Balancer Controller installed: https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html.
 
