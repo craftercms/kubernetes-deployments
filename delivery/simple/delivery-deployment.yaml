@@ -79,7 +79,7 @@ spec:
       # # Uncomment if using the Git SSH server in Authoring
       # initContainers:
       #   - name: ssh-keys-copier
-      #     image: craftercms/delivery_tomcat:4.0.4
+      #     image: craftercms/delivery_tomcat:4.1.1
       #     volumeMounts:
       #       - name: ssh-keys
       #         mountPath: /.ssh
@@ -94,12 +94,12 @@ spec:
       #         ssh-keyscan 'authoring-svc-headless' >> /opt/crafter/data/ssh/known_hosts; 
       #         chown -R crafter:crafter /opt/crafter/data/ssh
       containers:
-        # Elasticsearch container
-        - name: elasticsearch
-          image: docker.elastic.co/elasticsearch/elasticsearch:7.17.1
+        # OpenSearch container
+        - name: opensearch
+          image: opensearchproject/opensearch:2.8.0
           readinessProbe:
             httpGet:
-              path: /_cat/nodes?h=uptime
+              path: /_cluster/health?wait_for_status=yellow
               port: 9200
             initialDelaySeconds: 15
             periodSeconds: 10
@@ -107,15 +107,18 @@ spec:
             - containerPort: 9200
           volumeMounts:
             - name: data
-              subPath: indexes-es
-              mountPath: /usr/share/elasticsearch/data
+              subPath: indexes
+              mountPath: /usr/share/opensearch/data
             - name: logs
-              subPath: elasticsearch
-              mountPath: /usr/share/elasticsearch/logs
+              subPath: search
+              mountPath: /usr/share/opensearch/logs
           env:
             - name: discovery.type
               value: single-node
-            - name: ES_JAVA_OPTS
+            # For example purposes, disables SSL and authentication
+            - name: plugins.security.disabled
+              value: 'true'
+            - name: OPENSEARCH_JAVA_OPTS
               value: "-server -Xss1024K -XX:MaxRAMPercentage=70.0"
           resources:
             requests:
@@ -126,7 +129,7 @@ spec:
               memory: 2.5Gi
         # Tomcat container
         - name: tomcat
-          image: craftercms/delivery_tomcat:4.0.4
+          image: craftercms/delivery_tomcat:4.1.1
           startupProbe:
             httpGet:
               path: /api/1/monitoring/status.json?token=defaultManagementToken
@@ -167,7 +170,7 @@ spec:
               memory: 4Gi
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:4.0.4
+          image: craftercms/deployer:4.1.1
           startupProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
