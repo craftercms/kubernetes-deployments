@@ -90,7 +90,7 @@ spec:
       containers:
         # OpenSearch container for internal authoring/preview search
         - name: opensearch
-          image: opensearchproject/opensearch:2.8.0
+          image: opensearchproject/opensearch:2.9.0
           readinessProbe:
             httpGet:
               path: /_cluster/health?wait_for_status=yellow
@@ -123,7 +123,7 @@ spec:
               memory: 2.5Gi
         # Tomcat container
         - name: tomcat
-          image: craftercms/authoring_tomcat:4.1.1
+          image: craftercms/authoring_tomcat:4.1.4
           imagePullPolicy: "Always"
           startupProbe:
             httpGet:
@@ -165,7 +165,7 @@ spec:
               memory: 5Gi
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:4.1.1
+          image: craftercms/deployer:4.1.4
           startupProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
@@ -184,7 +184,7 @@ spec:
               port: 9191
             failureThreshold: 10
             timeoutSeconds: 60
-            periodSeconds: 60  
+            periodSeconds: 60
           ports:
             - containerPort: 9191
           volumeMounts:
@@ -211,7 +211,7 @@ spec:
         # # Git SSH server container
         # # Uncomment if using Git SSH
         # - name: git-ssh-server
-        #   image: craftercms/git_ssh_server:4.1.1
+        #   image: craftercms/git_ssh_server:4.1.4
         #   imagePullPolicy: "Always"
         #   ports:
         #     - containerPort: 22
@@ -224,7 +224,7 @@ spec:
         # Git HTTPS server container
         # Uncomment if using Git HTTPS
         - name: git-https-server
-          image: craftercms/git_https_server:4.1.1
+          image: craftercms/git_https_server:4.1.4
           imagePullPolicy: "Always"
           ports:
             - containerPort: 443
