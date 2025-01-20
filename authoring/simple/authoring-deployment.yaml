@@ -123,7 +123,7 @@ spec:
               memory: 2.5Gi
         # Tomcat container
         - name: tomcat
-          image: craftercms/authoring_tomcat:4.2.0
+          image: craftercms/authoring_tomcat:4.2.2
           imagePullPolicy: "Always"
           startupProbe:
             httpGet:
@@ -165,7 +165,7 @@ spec:
               memory: 5Gi
         # Deployer container
         - name: deployer
-          image: craftercms/deployer:4.2.0
+          image: craftercms/deployer:4.2.2
           startupProbe:
             httpGet:
               path: /api/1/monitoring/status?token=defaultManagementToken
@@ -211,7 +211,7 @@ spec:
         # # Git SSH server container
         # # Uncomment if using Git SSH
         # - name: git-ssh-server
-        #   image: craftercms/git_ssh_server:4.2.0
+        #   image: craftercms/git_ssh_server:4.2.2
         #   imagePullPolicy: "Always"
         #   ports:
         #     - containerPort: 22
@@ -224,7 +224,7 @@ spec:
         # Git HTTPS server container
         # Uncomment if using Git HTTPS
         - name: git-https-server
-          image: craftercms/git_https_server:4.2.0
+          image: craftercms/git_https_server:4.2.2
           imagePullPolicy: "Always"
           ports:
             - containerPort: 443
