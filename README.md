@@ -5,11 +5,11 @@
 1. Install kubectl
 2. Have a Kubernetes cluster available. For testing the Simple Authoring and Simple Delivery you can used any cluster. If using `minikube`, please run the following commands, to avoid `context deadline exceeded` errors:
 
-- `minikube image pull craftercms/authoring_tomcat:4.4.8`
+- `minikube image pull craftercms/authoring_tomcat:4.4.4`
 - `minikube image pull craftercms/authoring_tomcat:4.4.8E`
-- `minikube image pull craftercms/delivery_tomcat:4.4.8`
+- `minikube image pull craftercms/delivery_tomcat:4.4.4`
 - `minikube image pull craftercms/delivery_tomcat:4.4.8E`
-- `minikube image pull craftercms/deployer:4.4.8`
+- `minikube image pull craftercms/deployer:4.4.4`
 - `minikube image pull craftercms/deployer:4.4.8E`
 - `minikube image pull opensearchproject/opensearch:2.19.1`
 
